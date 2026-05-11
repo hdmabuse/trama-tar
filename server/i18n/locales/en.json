@@ -1,0 +1,322 @@
+{
+  "app": {
+    "name": "TRAMA-TAR",
+    "tagline": "Network Mapping Platform using Actor-Network Theory",
+    "description": "Map controversies, visualize networks, follow the actants"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "redes": "Networks",
+    "actantes": "Actants",
+    "associacoes": "Associations",
+    "visualizacao": "Visualization",
+    "exportar": "Export",
+    "configuracoes": "Settings",
+    "perfil": "Profile",
+    "sair": "Logout"
+  },
+  "actions": {
+    "criar": "Create",
+    "editar": "Edit",
+    "excluir": "Delete",
+    "salvar": "Save",
+    "cancelar": "Cancel",
+    "exportar": "Export",
+    "buscar": "Search",
+    "filtrar": "Filter",
+    "limpar": "Clear",
+    "fechar": "Close",
+    "voltar": "Back",
+    "avançar": "Next",
+    "confirmar": "Confirm",
+    "tentarNovamente": "Try again",
+    "adicionar": "Add",
+    "remover": "Remove",
+    "atualizar": "Update",
+    "download": "Download"
+  },
+  "messages": {
+    "success": "Operation completed successfully",
+    "error": "Error performing operation",
+    "loading": "Loading...",
+    "empty": "No records found",
+    "emptyWithAction": "No records found. Click to add.",
+    "confirmDelete": "Are you sure you want to delete?",
+    "confirmDeleteWarning": "This action cannot be undone.",
+    "saved": "Saved successfully",
+    "deleted": "Deleted successfully",
+    "updated": "Updated successfully",
+    "copied": "Copied to clipboard",
+    "noChanges": "No changes detected",
+    "validationError": "Validation error",
+    "required": "Required field",
+    "invalidEmail": "Invalid email",
+    "minLength": "Minimum {{count}} characters",
+    "maxLength": "Maximum {{count}} characters"
+  },
+  "entities": {
+    "rede": {
+      "singular": "Network",
+      "plural": "Networks",
+      "new": "New Network",
+      "edit": "Edit Network",
+      "fields": {
+        "nome": "Name",
+        "controversy": "Controversy",
+        "materia_de_preocupacao": "Matter of Concern",
+        "perspectiva_mapeador": "Mapper's Perspective",
+        "escopo_temporal": "Temporal Scope",
+        "escopo_espacial": "Spatial Scope",
+        "atividade_atual": "Current Activity",
+        "criado_em": "Created at",
+        "atualizado_em": "Updated at"
+      },
+      "stats": {
+        "total": "Total Networks",
+        "ativas": "Active Networks",
+        "arquivadas": "Archived Networks"
+      }
+    },
+    "actante": {
+      "singular": "Actant",
+      "plural": "Actants",
+      "new": "New Actant",
+      "edit": "Edit Actant",
+      "types": {
+        "humano": "Human",
+        "tecnologia": "Technology",
+        "instituicao": "Institution",
+        "ideia": "Idea",
+        "natureza": "Nature"
+      },
+      "status": {
+        "em_formacao": "Forming",
+        "estabilizado": "Stabilized",
+        "contestado": "Contested",
+        "disperso": "Dispersed"
+      },
+      "fields": {
+        "nome": "Name",
+        "descricao": "Description",
+        "tipo": "Type",
+        "status": "Status",
+        "tags": "Tags",
+        "modos_agencia": "Agency Modes",
+        "no_plasma": "In Plasma",
+        "pre_campo": "Pre-Field",
+        "plasma_relacao_controversia": "Relation to Controversy",
+        "fonte": "Source",
+        "pos_x": "Position X",
+        "pos_y": "Position Y",
+        "distribuido": "Distributed",
+        "registrado_por": "Registered by",
+        "registrado_em": "Registered at"
+      },
+      "stats": {
+        "total": "Total Actants",
+        "porTipo": "By Type",
+        "porStatus": "By Status",
+        "plasma": "Actants in Plasma"
+      }
+    },
+    "associacao": {
+      "singular": "Association",
+      "plural": "Associations",
+      "new": "New Association",
+      "edit": "Edit Association",
+      "modo_acao": {
+        "mediador": "Mediator",
+        "intermediario": "Intermediary"
+      },
+      "direcao": {
+        "unidirecional": "Unidirectional",
+        "bidirecional": "Bidirectional"
+      },
+      "status": {
+        "ativa": "Active",
+        "historica": "Historical",
+        "contestada": "Contested"
+      },
+      "fields": {
+        "origem": "Source",
+        "destino": "Target",
+        "modo_acao": "Mode of Action",
+        "direcao": "Direction",
+        "intensidade": "Intensity",
+        "descricao_traducao": "Translation Description",
+        "status": "Status",
+        "fonte": "Source",
+        "no_plasma": "In Plasma",
+        "criterio_confirmacao": "Confirmation Criterion",
+        "registrado_por": "Registered by",
+        "registrado_em": "Registered at"
+      },
+      "stats": {
+        "total": "Total Associations",
+        "mediadores": "Mediators",
+        "intermediarios": "Intermediaries",
+        "ativas": "Active"
+      }
+    },
+    "caixa_preta": {
+      "singular": "Black Box",
+      "plural": "Black Boxes",
+      "new": "New Black Box",
+      "fields": {
+        "nome": "Name",
+        "descricao": "Description",
+        "rede": "Network"
+      }
+    },
+    "mapeador": {
+      "singular": "Mapper",
+      "plural": "Mappers",
+      "perfil": "My Profile",
+      "fields": {
+        "nome": "Name",
+        "email": "Email",
+        "senha": "Password",
+        "criado_em": "Created at",
+        "ultimo_acesso": "Last Access"
+      }
+    }
+  },
+  "auth": {
+    "login": "Login",
+    "logout": "Logout",
+    "registro": "Register",
+    "email": "Email",
+    "senha": "Password",
+    "nome": "Name",
+    "confirmarSenha": "Confirm Password",
+    "forgotPassword": "Forgot password",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "welcomeBack": "Welcome back",
+    "createAccount": "Create account",
+    "loginSuccess": "Login successful",
+    "logoutSuccess": "Logout successful",
+    "invalidCredentials": "Invalid email or password",
+    "emailAlreadyExists": "Email already registered",
+    "passwordMinLength": "Password must be at least 8 characters",
+    "passwordMismatch": "Passwords do not match"
+  },
+  "errors": {
+    "notFound": "Not found",
+    "notFoundMessage": "The requested resource was not found",
+    "unauthorized": "Unauthorized",
+    "unauthorizedMessage": "You do not have permission to access this resource",
+    "forbidden": "Forbidden",
+    "validation": "Validation error",
+    "serverError": "Internal server error",
+    "serverErrorMessage": "Something went wrong. Please try again later.",
+    "networkError": "Connection error",
+    "timeout": "Timeout exceeded"
+  },
+  "export": {
+    "title": "Export Data",
+    "format": "Format",
+    "formats": {
+      "json": "JSON (Backup)",
+      "graphml": "GraphML (Gephi/Cytoscape)",
+      "csv": "CSV (Spreadsheet)",
+      "pdf": "PDF (Report)"
+    },
+    "options": {
+      "includeActantes": "Include Actants",
+      "includeAssociacoes": "Include Associations",
+      "includeHistory": "Include History"
+    },
+    "success": "File exported successfully",
+    "expireWarning": "This file expires in {{days}} days",
+    "downloadButton": "Download File"
+  },
+  "glossary": {
+    "title": "Glossary",
+    "actant": "Entity that acts and is affected by others. Can be human, technology, institution, idea or nature.",
+    "traducao": "Process by which an actant mediates the interests of others, creating new paths and meanings in the network.",
+    "mediador": "Actant that transforms, translates and influences others. Unlike a mere transmitter, the mediator modifies what passes through it.",
+    "intermediario": "Actant that only transmits information without modifying its content or meaning.",
+    "plasma": "Domain of the not-yet-represented. Everything not yet mapped but that can potentially participate in the network.",
+    "caixa_preta": "When a network stabilizes and functions as a unit, becoming 'invisible' — like electricity or the internet.",
+    "immutable_movel": "Entity that can circulate without being altered, but that rearranges the network. Data, documents, technical standards.",
+    "controversy": "Social issue that divides actants with different positions on a topic."
+  },
+  "landing": {
+    "title": "Network Mapping using Actor-Network Theory",
+    "subtitle": "An open source platform for researchers to map controversies, social networks and sociotechnical relations using ANT principles.",
+    "cta": "Start Mapping",
+    "ctaSecondary": "Access Platform",
+    "features": {
+      "actantes": {
+        "title": "Actants",
+        "description": "Not just 'actors' — include humans, technologies, institutions, ideas and any entity that participates in the network."
+      },
+      "associacoes": {
+        "title": "Associations",
+        "description": "Document relations, translations, mediations and antagonisms between actants. Discover who translates whom."
+      },
+      "redes": {
+        "title": "Complete Networks",
+        "description": "Visualize the network as a whole. Trace the fluidity of relations and identify central mediators."
+      }
+    },
+    "about": {
+      "title": "What is Actor-Network Theory?",
+      "description": "Actor-Network Theory (ANT), developed by Bruno Latour, Michel Callon and John Law, is an approach that treats the world as a network composed of heterogeneous actants."
+    },
+    "concepts": {
+      "title": "Fundamental Concepts"
+    },
+    "quote": {
+      "text": "To understand how science and technology work, it is not enough to look at human actors, we must follow the things.",
+      "author": "Bruno Latour",
+      "work": "Science in Action (1987)"
+    },
+    "footer": {
+      "license": "License AGPL-3.0",
+      "github": "GitHub"
+    }
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome, {{name}}",
+    "recentNetworks": "Recent Networks",
+    "stats": {
+      "title": "Statistics",
+      "totalRedes": "Total Networks",
+      "totalActants": "Total Actants",
+      "totalAssociacoes": "Total Associations"
+    },
+    "quickActions": "Quick Actions",
+    "noData": "No data available yet"
+  },
+  "validation": {
+    "required": "{{field}} is required",
+    "invalidEmail": "{{field}} must be a valid email",
+    "minLength": "{{field}} must be at least {{count}} characters",
+    "maxLength": "{{field}} must be at most {{count}} characters",
+    "enum": "{{field}} must be one of: {{values}}",
+    "invalidField": "{{field}} is invalid"
+  },
+  "time": {
+    "justNow": "Just now",
+    "minutesAgo": "{{count}} minute(s) ago",
+    "hoursAgo": "{{count}} hour(s) ago",
+    "daysAgo": "{{count}} day(s) ago",
+    "dateFormat": "MM/DD/YYYY",
+    "timeFormat": "HH:mm"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "theme": "Theme",
+    "themes": {
+      "dark": "Dark",
+      "light": "Light",
+      "system": "System"
+    },
+    "notifications": "Notifications",
+    "privacy": "Privacy"
+  }
+}

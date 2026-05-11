@@ -1,0 +1,322 @@
+{
+  "app": {
+    "name": "TRAMA-TAR",
+    "tagline": "Plataforma de Mapeo de Redes usando la Teoría Actor-Red",
+    "description": "Mapea controversias, visualiza redes, sigue a los actantes"
+  },
+  "nav": {
+    "dashboard": "Panel",
+    "redes": "Redes",
+    "actantes": "Actantes",
+    "associacoes": "Asociaciones",
+    "visualizacion": "Visualización",
+    "exportar": "Exportar",
+    "configuracoes": "Configuración",
+    "perfil": "Perfil",
+    "sair": "Salir"
+  },
+  "actions": {
+    "criar": "Crear",
+    "editar": "Editar",
+    "excluir": "Eliminar",
+    "salvar": "Guardar",
+    "cancelar": "Cancelar",
+    "exportar": "Exportar",
+    "buscar": "Buscar",
+    "filtrar": "Filtrar",
+    "limpar": "Limpiar",
+    "fechar": "Cerrar",
+    "voltar": "Volver",
+    "avançar": "Siguiente",
+    "confirmar": "Confirmar",
+    "tentarNovamente": "Intentar de nuevo",
+    "adicionar": "Agregar",
+    "remover": "Quitar",
+    "actualizar": "Actualizar",
+    "download": "Descargar"
+  },
+  "messages": {
+    "success": "Operación completada con éxito",
+    "error": "Error al realizar la operación",
+    "loading": "Cargando...",
+    "empty": "No se encontraron registros",
+    "emptyWithAction": "No se encontraron registros. Haga clic para agregar.",
+    "confirmDelete": "¿Está seguro de que desea eliminar?",
+    "confirmDeleteWarning": "Esta acción no se puede deshacer.",
+    "saved": "Guardado con éxito",
+    "deleted": "Eliminado con éxito",
+    "updated": "Actualizado con éxito",
+    "copied": "Copiado al portapapeles",
+    "noChanges": "No se detectaron cambios",
+    "validationError": "Error de validación",
+    "required": "Campo obligatorio",
+    "invalidEmail": "Correo electrónico inválido",
+    "minLength": "Mínimo {{count}} caracteres",
+    "maxLength": "Máximo {{count}} caracteres"
+  },
+  "entities": {
+    "rede": {
+      "singular": "Red",
+      "plural": "Redes",
+      "new": "Nueva Red",
+      "edit": "Editar Red",
+      "fields": {
+        "nombre": "Nombre",
+        "controversia": "Controversia",
+        "materia_de_preocupacion": "Materia de Preocupación",
+        "perspectiva_mapeador": "Perspectiva del Mapeador",
+        "escopo_temporal": "Alcance Temporal",
+        "escopo_espacial": "Alcance Espacial",
+        "atividade_atual": "Actividad Actual",
+        "criado_em": "Creado el",
+        "actualizado_em": "Actualizado el"
+      },
+      "stats": {
+        "total": "Total de Redes",
+        "ativas": "Redes Activas",
+        "arquivadas": "Redes Archivadas"
+      }
+    },
+    "actante": {
+      "singular": "Actante",
+      "plural": "Actantes",
+      "new": "Nuevo Actante",
+      "edit": "Editar Actante",
+      "types": {
+        "humano": "Humano",
+        "tecnologia": "Tecnología",
+        "instituicion": "Institución",
+        "idea": "Idea",
+        "naturaleza": "Naturaleza"
+      },
+      "status": {
+        "em_formacao": "En Formación",
+        "estabilizado": "Estabilizado",
+        "contestado": "Cuestionado",
+        "disperso": "Disperso"
+      },
+      "fields": {
+        "nombre": "Nombre",
+        "descripcion": "Descripción",
+        "tipo": "Tipo",
+        "status": "Estado",
+        "tags": "Etiquetas",
+        "modos_agencia": "Modos de Agencia",
+        "no_plasma": "En Plasma",
+        "pre_campo": "Pre-Campo",
+        "plasma_relacao_controversia": "Relación con la Controversia",
+        "fonte": "Fuente",
+        "pos_x": "Posición X",
+        "pos_y": "Posición Y",
+        "distribuido": "Distribuido",
+        "registrado_por": "Registrado por",
+        "registrado_em": "Registrado el"
+      },
+      "stats": {
+        "total": "Total de Actantes",
+        "porTipo": "Por Tipo",
+        "porStatus": "Por Estado",
+        "plasma": "Actantes en Plasma"
+      }
+    },
+    "associacao": {
+      "singular": "Asociación",
+      "plural": "Asociaciones",
+      "new": "Nueva Asociación",
+      "edit": "Editar Asociación",
+      "modo_acao": {
+        "mediador": "Mediador",
+        "intermediario": "Intermediario"
+      },
+      "direccion": {
+        "unidirecional": "Unidireccional",
+        "bidirecional": "Bidireccional"
+      },
+      "status": {
+        "activa": "Activa",
+        "historica": "Histórica",
+        "contestada": "Cuestionada"
+      },
+      "fields": {
+        "origen": "Origen",
+        "destino": "Destino",
+        "modo_acao": "Modo de Acción",
+        "direccion": "Dirección",
+        "intensidad": "Intensidad",
+        "descripcion_traducion": "Descripción de la Traducción",
+        "status": "Estado",
+        "fonte": "Fuente",
+        "no_plasma": "En Plasma",
+        "criterio_confirmacion": "Criterio de Confirmación",
+        "registrado_por": "Registrado por",
+        "registrado_em": "Registrado el"
+      },
+      "stats": {
+        "total": "Total de Asociaciones",
+        "mediadores": "Mediadores",
+        "intermediarios": "Intermediarios",
+        "ativas": "Activas"
+      }
+    },
+    "caja_negra": {
+      "singular": "Caja Negra",
+      "plural": "Cajas Negras",
+      "new": "Nueva Caja Negra",
+      "fields": {
+        "nombre": "Nombre",
+        "descripcion": "Descripción",
+        "red": "Red"
+      }
+    },
+    "mapeador": {
+      "singular": "Mapeador",
+      "plural": "Mapeadores",
+      "perfil": "Mi Perfil",
+      "fields": {
+        "nombre": "Nombre",
+        "email": "Correo electrónico",
+        "senha": "Contraseña",
+        "criado_em": "Creado el",
+        "ultimo_acesso": "Último Acceso"
+      }
+    }
+  },
+  "auth": {
+    "login": "Iniciar sesión",
+    "logout": "Cerrar sesión",
+    "registro": "Registrarse",
+    "email": "Correo electrónico",
+    "senha": "Contraseña",
+    "nombre": "Nombre",
+    "confirmarSenha": "Confirmar Contraseña",
+    "forgotPassword": "Olvidé mi contraseña",
+    "noAccount": "¿No tiene cuenta?",
+    "hasAccount": "¿Ya tiene cuenta?",
+    "welcomeBack": "Bienvenido de nuevo",
+    "createAccount": "Crear cuenta",
+    "loginSuccess": "Inicio de sesión exitoso",
+    "logoutSuccess": "Cierre de sesión exitoso",
+    "invalidCredentials": "Correo electrónico o contraseña incorrectos",
+    "emailAlreadyExists": "Correo electrónico ya registrado",
+    "passwordMinLength": "La contraseña debe tener al menos 8 caracteres",
+    "passwordMismatch": "Las contraseñas no coinciden"
+  },
+  "errors": {
+    "notFound": "No encontrado",
+    "notFoundMessage": "El recurso solicitado no se encontró",
+    "unauthorized": "No autorizado",
+    "unauthorizedMessage": "No tiene permiso para acceder a este recurso",
+    "forbidden": "Acceso denegado",
+    "validation": "Error de validación",
+    "serverError": "Error interno del servidor",
+    "serverErrorMessage": "Algo salió mal. Por favor, intente de nuevo más tarde.",
+    "networkError": "Error de conexión",
+    "timeout": "Tiempo de espera excedido"
+  },
+  "export": {
+    "title": "Exportar Datos",
+    "format": "Formato",
+    "formats": {
+      "json": "JSON (Respaldo)",
+      "graphml": "GraphML (Gephi/Cytoscape)",
+      "csv": "CSV (Hoja de cálculo)",
+      "pdf": "PDF (Informe)"
+    },
+    "options": {
+      "includeActantes": "Incluir Actantes",
+      "includeAssociacoes": "Incluir Asociaciones",
+      "includeHistory": "Incluir Historial"
+    },
+    "success": "Archivo exportado con éxito",
+    "expireWarning": "Este archivo caduca en {{days}} días",
+    "downloadButton": "Descargar Archivo"
+  },
+  "glossary": {
+    "title": "Glosario",
+    "actante": "Entidad que actúa y es afectada por otras. Puede ser humano, tecnología, institución, idea o naturaleza.",
+    "traduccion": "Proceso por el cual un actante media los intereses de otros, creando nuevos caminos y significados en la red.",
+    "mediador": "Actante que transforma, traduce e influye en otros. A diferencia de un mero transmisor, el mediador modifica lo que pasa por él.",
+    "intermediario": "Actante que solo transmite información sin modificar su contenido o significado.",
+    "plasma": "Dominio de lo aún no representado. Todo lo que aún no se ha mapeado pero que potencialmente puede participar en la red.",
+    "caja_negra": "Cuando una red se estabiliza y funciona como una unidad, volviéndose 'invisible' — como la electricidad o internet.",
+    "immutable_movel": "Entidad que puede circular sin ser alterada, pero que reordena la red. Datos, documentos, estándares técnicos.",
+    "controversia": "Tema social que divide a los actantes con diferentes posiciones sobre un tema."
+  },
+  "landing": {
+    "title": "Mapeo de Redes usando la Teoría Actor-Red",
+    "subtitle": "Una plataforma de código abierto para investigadores mapear controversias, redes sociales y relaciones sociotécnicas usando los principios de la ANT.",
+    "cta": "Comenzar a Mapear",
+    "ctaSecondary": "Acceder a la Plataforma",
+    "features": {
+      "actantes": {
+        "title": "Actantes",
+        "description": "No solo 'actores' — incluya humanos, tecnologías, instituciones, ideas y cualquier entidad que participe en la red."
+      },
+      "associacoes": {
+        "title": "Asociaciones",
+        "description": "Documente relaciones, traducciones, mediaciones y antagonismos entre actantes. Descubra quién traduce a quién."
+      },
+      "redes": {
+        "title": "Redes Completas",
+        "description": "Visualice la red como un todo. Rastreé la fluidez de las relaciones e identifique a los mediadores centrales."
+      }
+    },
+    "about": {
+      "title": "¿Qué es la Teoría Actor-Red?",
+      "description": "La Teoría Actor-Red (ANT), desarrollada por Bruno Latour, Michel Callon y John Law, es un enfoque que trata al mundo como una red compuesta por actantes heterogéneos."
+    },
+    "concepts": {
+      "title": "Conceptos Fundamentales"
+    },
+    "quote": {
+      "text": "Para comprender cómo funcionan la ciencia y la tecnología, no basta con mirar a los actores humanos, hay que seguir las cosas.",
+      "author": "Bruno Latour",
+      "work": "Science in Action (1987)"
+    },
+    "footer": {
+      "license": "Licencia AGPL-3.0",
+      "github": "GitHub"
+    }
+  },
+  "dashboard": {
+    "title": "Panel de Control",
+    "welcome": "Bienvenido, {{name}}",
+    "recentNetworks": "Redes Recientes",
+    "stats": {
+      "title": "Estadísticas",
+      "totalRedes": "Total de Redes",
+      "totalActants": "Total de Actantes",
+      "totalAssociacoes": "Total de Asociaciones"
+    },
+    "quickActions": "Acciones Rápidas",
+    "noData": "Aún no hay datos disponibles"
+  },
+  "validation": {
+    "required": "{{field}} es obligatorio",
+    "invalidEmail": "{{field}} debe ser un correo electrónico válido",
+    "minLength": "{{field}} debe tener al menos {{count}} caracteres",
+    "maxLength": "{{field}} debe tener como máximo {{count}} caracteres",
+    "enum": "{{field}} debe ser uno de: {{values}}",
+    "invalidField": "{{field}} es inválido"
+  },
+  "time": {
+    "justNow": "Ahora mismo",
+    "minutesAgo": "Hace {{count}} minuto(s)",
+    "hoursAgo": "Hace {{count}} hora(s)",
+    "daysAgo": "Hace {{count}} día(s)",
+    "dateFormat": "DD/MM/YYYY",
+    "timeFormat": "HH:mm"
+  },
+  "settings": {
+    "title": "Configuración",
+    "language": "Idioma",
+    "theme": "Tema",
+    "themes": {
+      "dark": "Oscuro",
+      "light": "Claro",
+      "system": "Sistema"
+    },
+    "notifications": "Notificaciones",
+    "privacy": "Privacidad"
+  }
+}

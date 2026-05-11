@@ -1,0 +1,1487 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TRAMA-TAR — Redes Ator-Rede</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<style>
+:root{
+  --bg:#060606;--panel:#0F0F0F;--panel2:#161616;--hover:#2A2A2A;
+  --border:#383838;--border2:#2A2A2A;
+  --amber:#F0A020;--amber-d:#B87818;--amber-bg:rgba(200,132,26,.08);
+  --white:#FFFFFF;--gray-hi:#888;--gray-mid:#555;--gray-lo:#333;
+  --red:#F05545;--green:#2ECC71;--blue-d:#2C3E50;
+  --font-size: 14px;
+  --mono:'Space Mono',monospace;--sans:'DM Sans',system-ui,sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);color:var(--white);font-family:var(--sans);overflow:hidden;font-size:var(--font-size)}
+
+/* ── Layout ── */
+#app{display:grid;grid-template-rows:44px auto 1fr;height:100vh}
+#topbar{background:var(--panel);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:10px;z-index:100}
+#mop-bar{background:rgba(122,79,16,.2);border-bottom:1px solid var(--amber-d);padding:4px 16px;display:flex;align-items:center;gap:8px;flex-shrink:0;min-height:26px}
+#main{display:grid;grid-template-columns:220px 1fr 280px;overflow:hidden}
+
+/* ── Topbar ── */
+.logo{font-family:var(--mono);font-size:14px;font-weight:700;color:var(--amber);letter-spacing:2px}
+.logo span{color:var(--gray-mid);font-weight:400}
+.steps{display:flex;align-items:center;gap:6px;margin-left:12px}
+.step{padding:3px 9px;border-radius:10px;font-family:var(--mono);font-size:15px;cursor:pointer;border:1px solid var(--border);color:var(--gray-mid);transition:all .15s}
+.step.active{background:var(--amber-d);color:var(--white);border-color:var(--amber)}
+.step.done{border-color:var(--c-gray-hi);color:var(--white)}
+.step.done::after{content:' ✓';color:var(--green)}
+.step-arrow{color:var(--gray-lo);font-size:15px}
+.ml-auto{margin-left:auto}
+.topbar-btn{background:none;border:1px solid var(--border);color:var(--white);padding:4px 10px;border-radius:3px;font-size:15px;cursor:pointer;font-family:var(--sans)}
+.topbar-btn:hover{border-color:var(--amber);color:var(--amber)}
+.topbar-btn.primary{background:var(--amber);border-color:var(--amber);color:#000;font-weight:600}
+.topbar-btn.primary:hover{background:#D0901E}
+
+/* ── MOP Bar ── */
+#mop-bar .label{font-family:var(--mono);font-size:8px;color:var(--amber-d);text-transform:uppercase;letter-spacing:1px;white-space:nowrap}
+#mop-bar .text{font-size:14px;color:var(--amber);font-family:var(--mono);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* ── Left Panel ── */
+#left-panel{background:#0D0D0D;border-right:1px solid var(--border);overflow-y:auto;display:flex;flex-direction:column}
+#left-panel .panel-header{padding:10px 14px;border-bottom:1px solid var(--border);background:var(--panel)}
+#left-panel .panel-title{font-family:var(--mono);font-size:15px;color:var(--amber);text-transform:uppercase;letter-spacing:1.5px}
+#left-panel .panel-sub{font-family:var(--mono);font-size:8px;color:var(--gray-mid);margin-top:2px}
+
+/* ── Actante list items ── */
+.actante-row{display:flex;align-items:center;gap:8px;padding:9px 14px;border-bottom:1px solid var(--border2);cursor:pointer;transition:background .1s}
+.actante-row:hover{background:var(--hover)}
+.actante-row.selected{background:var(--amber-bg);border-left:2px solid var(--amber)}
+.a-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.a-dot.estabilizado{background:var(--green)}
+.a-dot.em_formacao{background:none;border:1.5px dashed var(--amber)}
+.a-dot.contestado{background:none;border:1.5px dashed var(--red)}
+.a-dot.disperso{background:var(--gray-lo)}
+.a-dot.plasma{background:none;border:1px solid var(--gray-lo);opacity:.5}
+.a-name{flex:1;font-size:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.a-badge{font-size:8px;font-family:var(--mono);padding:1px 5px;border-radius:8px;white-space:nowrap}
+.a-badge.pc{border:1px dashed var(--amber);color:var(--amber-d)}
+.a-badge.pl{border:1px solid var(--gray-lo);color:var(--gray-lo)}
+.a-badge.cont{border:1px solid var(--red);color:var(--red)}
+.a-actions{display:none;gap:3px}
+.actante-row:hover .a-actions{display:flex}
+.a-btn{background:var(--panel2);border:1px solid var(--border);color:var(--gray-hi);padding:1px 6px;border-radius:2px;font-size:15px;cursor:pointer;font-family:var(--mono)}
+.a-btn:hover{border-color:var(--amber);color:var(--amber)}
+.a-btn.del:hover{border-color:var(--red);color:var(--red)}
+
+/* ── Quick add ── */
+.quick-add{padding:8px 14px;display:flex;gap:6px;border-bottom:1px solid var(--border)}
+.quick-add input{flex:1;background:var(--panel2);border:1px solid var(--border);color:var(--white);padding:5px 8px;border-radius:3px;font-size:15px;font-family:var(--sans)}
+.quick-add input:focus{outline:none;border-color:var(--amber)}
+.quick-add button{background:var(--amber);border:none;color:#000;padding:5px 10px;border-radius:3px;font-size:15px;cursor:pointer;font-weight:600}
+
+/* Plasma separator */
+.plasma-sep{padding:5px 14px;background:#080808;border-top:1px solid var(--border2);border-bottom:1px solid var(--border2)}
+.plasma-sep span{font-family:var(--mono);font-size:8px;color:var(--gray-lo)}
+
+/* ── Canvas ── */
+#canvas-wrap{background:#090909;position:relative;overflow:hidden}
+#canvas{width:100%;height:100%;cursor:grab}
+#canvas:active{cursor:grabbing}
+.canvas-empty{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;color:var(--gray-lo);font-size:15px;pointer-events:none}
+.canvas-empty .icon{font-size:32px;margin-bottom:8px;opacity:.3}
+
+/* ── Right Sidebar ── */
+#right-panel{background:var(--panel);border-left:1px solid var(--border);overflow-y:auto;display:flex;flex-direction:column}
+.sidebar-header{padding:12px 14px;border-bottom:1px solid var(--border);background:var(--panel2)}
+.sidebar-title{font-family:var(--mono);font-size:15px;color:var(--amber);text-transform:uppercase;letter-spacing:1.5px}
+.sidebar-empty{padding:24px 14px;color:var(--gray-mid);font-size:14px;line-height:1.7}
+
+/* ── Sidebar sections ── */
+.sb-section{padding:10px 14px;border-bottom:1px solid var(--border)}
+.sb-label{font-family:var(--mono);font-size:8px;color:var(--gray-mid);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.sb-text{font-size:15px;color:var(--gray-hi);line-height:1.6}
+.sb-action-row{display:flex;gap:5px;flex-wrap:wrap}
+.sb-btn{background:none;border:1px solid var(--border);color:var(--gray-hi);padding:3px 8px;border-radius:2px;font-size:15px;cursor:pointer;font-family:var(--mono)}
+.sb-btn:hover{border-color:var(--amber);color:var(--amber)}
+.sb-btn.danger:hover{border-color:var(--red);color:var(--red)}
+.mode-badge{display:inline-block;padding:2px 8px;border-radius:8px;font-size:15px;font-family:var(--mono)}
+.mode-badge.mediador{border:1px solid var(--amber);color:var(--amber);background:var(--amber-bg)}
+.mode-badge.intermediario{border:1px solid var(--gray-hi);color:var(--gray-hi)}
+.chip{display:inline-flex;align-items:center;padding:1px 6px;border-radius:8px;font-size:8px;font-family:var(--mono);gap:4px;margin:1px}
+.chip.estab{border:1px solid var(--green);color:var(--green)}
+.chip.form{border:1px solid var(--amber);color:var(--amber)}
+.chip.cont{border:1px solid var(--red);color:var(--red)}
+.chip.tag{border:1px solid var(--border);color:var(--gray-hi)}
+
+/* ── Legend ── */
+#legend{position:absolute;bottom:12px;right:12px;background:rgba(20,20,20,.92);border:1px solid var(--border);border-radius:3px;padding:8px 10px;backdrop-filter:blur(4px)}
+.leg-row{display:flex;align-items:center;gap:7px;margin-bottom:4px;font-size:15px;color:var(--gray-hi)}
+.leg-row:last-child{margin-bottom:0}
+.leg-line{width:24px;height:2px}
+
+/* ── Modal ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:999;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--panel);border:1px solid var(--border);border-radius:6px;width:500px;max-width:95vw;max-height:88vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.6);transform:translateY(8px);transition:transform .2s}
+.modal-overlay.open .modal{transform:translateY(0)}
+.modal-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--panel2)}
+.modal-title{font-family:var(--mono);font-size:15px;color:var(--amber)}
+.modal-close{background:none;border:none;color:var(--gray-hi);cursor:pointer;font-size:16px;padding:2px 6px;border-radius:3px}
+.modal-close:hover{background:var(--hover);color:var(--white)}
+.modal-body{padding:4px 0}
+.modal-footer{padding:12px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px}
+
+/* ── Form elements ── */
+.fg{padding:10px 20px;border-bottom:1px solid var(--border)}
+.fl{font-family:var(--mono);font-size:15px;color:var(--gray-hi);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;display:flex;align-items:center;gap:5px}
+.req-dot{width:4px;height:4px;border-radius:50%;background:var(--amber)}
+.fi{width:100%;background:var(--panel2);border:1px solid var(--border);color:var(--white);padding:7px 10px;border-radius:3px;font-size:14px;font-family:var(--sans);transition:border-color .15s}
+.fi:focus{outline:none;border-color:var(--amber)}
+.ft{width:100%;background:#111;border:1px solid var(--border);color:var(--white);padding:8px 10px;border-radius:3px;font-size:14px;font-family:var(--sans);resize:vertical;min-height:80px;line-height:1.6}
+.ft:focus{outline:none;border-color:rgba(200,132,26,.5)}
+.fs{width:100%;background:var(--panel2);border:1px solid var(--border);color:var(--white);padding:7px 10px;border-radius:3px;font-size:14px;font-family:var(--sans)}
+.fs option{background:var(--panel2)}
+.chip-row{display:flex;flex-wrap:wrap;gap:4px}
+.chip-opt{border:1px solid var(--border);border-radius:8px;padding:2px 8px;font-size:15px;font-family:var(--mono);cursor:pointer;transition:all .15s;color:var(--gray-hi)}
+.chip-opt:hover{border-color:var(--gray-hi);color:var(--white)}
+.chip-opt.active{border-color:var(--amber);color:var(--amber);background:var(--amber-bg)}
+
+/* ── Mode picker ── */
+.mode-picker{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.mode-card{border:1px solid var(--border);border-radius:4px;padding:12px;cursor:pointer;transition:all .15s}
+.mode-card:hover{border-color:var(--gray-hi)}
+.mode-card.active.mediador{border-color:var(--amber);background:var(--amber-bg)}
+.mode-card.active.intermediario{border-color:var(--gray-hi);background:rgba(136,136,136,.08)}
+.mode-card-title{font-family:var(--mono);font-size:15px;font-weight:700;margin-bottom:5px}
+.mode-card.mediador .mode-card-title{color:var(--amber)}
+.mode-card.intermediario .mode-card-title{color:var(--gray-hi)}
+.mode-card-desc{font-size:14px;color:var(--white);line-height:1.5}
+.mode-card-ex{font-size:15px;font-family:var(--mono);margin-top:5px;color:var(--gray-lo)}
+.epist-note{margin:0 20px 10px;background:var(--amber-bg);border:1px solid var(--amber-d);border-radius:3px;padding:8px 12px;font-size:14px;color:var(--amber-d);line-height:1.6}
+.epist-note strong{color:var(--amber);font-family:var(--mono);font-size:15px}
+
+/* ── Buttons ── */
+.btn{background:none;border:1px solid var(--border);color:var(--white);padding:6px 14px;border-radius:3px;font-size:14px;cursor:pointer;font-family:var(--sans);transition:all .15s}
+.btn:hover{border-color:var(--amber);color:var(--amber)}
+.btn.primary{background:var(--amber);border-color:var(--amber);color:#000;font-weight:600}
+.btn.primary:hover{background:#D0901E}
+.btn.danger{border-color:var(--red);color:var(--red)}
+.btn:disabled{opacity:.4;cursor:default}
+
+/* ── Toggle ── */
+.toggle-row{display:flex;align-items:center;gap:8px;padding:10px 20px;border-bottom:1px solid var(--border);cursor:pointer}
+.toggle-row:hover{background:var(--hover)}
+.tt{width:32px;height:17px;background:var(--gray-lo);border-radius:9px;position:relative;transition:background .2s}
+.tt.on{background:rgba(200,132,26,.4)}
+.th{width:11px;height:11px;border-radius:50%;background:var(--gray-hi);position:absolute;top:3px;left:3px;transition:all .2s}
+.tt.on .th{left:18px;background:var(--amber)}
+.tl{font-size:15px;color:var(--gray-hi)}
+
+/* ── Dashboard (rede list) ── */
+#dashboard{display:none;padding:20px;overflow-y:auto;grid-column:1/-1}
+#dashboard.active{display:block}
+.dash-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;margin-top:16px}
+.dash-card{background:var(--panel);border:1px solid var(--border);border-radius:4px;padding:14px;cursor:pointer;transition:all .15s}
+.dash-card:hover{border-color:var(--amber-d);background:var(--hover)}
+.dash-card.active{border-color:var(--amber)}
+.dash-title{font-size:14px;font-weight:600;margin-bottom:4px}
+.dash-mop{font-size:14px;color:var(--gray-hi);line-height:1.5;margin-bottom:10px;font-family:var(--mono)}
+.dash-metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:8px}
+.dm{background:var(--panel2);border-radius:3px;padding:5px;text-align:center}
+.dm-n{font-size:14px;font-weight:600}
+.dm-l{font-size:8px;color:var(--gray-mid);font-family:var(--mono)}
+.dm.amber .dm-n{color:var(--amber)}
+.dm.red .dm-n{color:var(--red)}
+.dash-prog{height:3px;background:var(--border);border-radius:2px;overflow:hidden}
+.dash-prog-fill{height:100%;background:var(--amber);border-radius:2px;transition:width .3s}
+.dash-add{border:1px dashed var(--border);border-radius:4px;padding:14px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:120px;transition:all .15s}
+.dash-add:hover{border-color:var(--amber-d)}
+.dash-add .icon{font-size:22px;color:var(--gray-lo)}
+
+/* ── Alerts ── */
+#alerts{position:fixed;bottom:16px;right:16px;z-index:9999;display:flex;flex-direction:column;gap:5px}
+.alert{background:var(--panel2);border:1px solid var(--border);border-radius:3px;padding:9px 14px;font-size:15px;animation:alertIn .15s ease;max-width:300px}
+.alert.success{border-color:var(--green)}
+.alert.error{border-color:var(--red)}
+.alert.warning{border-color:var(--amber)}
+@keyframes alertIn{from{opacity:0;transform:translateX(10px)}to{opacity:1;transform:none}}
+
+
+/* ── Font size control ── */
+.font-ctrl{display:flex;align-items:center;gap:4px}
+.font-btn{background:none;border:1px solid var(--border);color:var(--gray-hi);width:24px;height:24px;border-radius:3px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;line-height:1}
+.font-btn:hover{border-color:var(--amber);color:var(--amber)}
+.font-label{font-size:15px;color:var(--gray-mid);font-family:var(--mono);min-width:28px;text-align:center}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+/* ── Auth overlay ── */
+#auth-screen{position:fixed;inset:0;background:var(--bg);z-index:9998;display:flex;align-items:center;justify-content:center}
+.auth-card{background:var(--panel);border:1px solid var(--border);border-radius:6px;width:380px;padding:32px}
+.auth-logo{font-family:var(--mono);font-size:22px;font-weight:700;color:var(--amber);text-align:center;margin-bottom:4px}
+.auth-logo span{color:var(--gray-mid);font-weight:400}
+.auth-sub{font-size:15px;color:var(--gray-mid);text-align:center;margin-bottom:24px;line-height:1.6}
+.auth-tab{display:flex;gap:0;margin-bottom:20px;border:1px solid var(--border);border-radius:3px;overflow:hidden}
+.auth-tab button{flex:1;background:none;border:none;color:var(--gray-mid);padding:8px;font-size:14px;cursor:pointer;font-family:var(--sans)}
+.auth-tab button.active{background:var(--amber);color:#000;font-weight:600}
+.auth-field{margin-bottom:12px}
+.auth-field label{display:block;font-size:14px;font-family:var(--mono);color:var(--gray-hi);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+.auth-field input{width:100%;background:var(--panel2);border:1px solid var(--border);color:var(--white);padding:8px 10px;border-radius:3px;font-size:15px;font-family:var(--sans)}
+.auth-field input:focus{outline:none;border-color:var(--amber)}
+.auth-submit{width:100%;background:var(--amber);border:none;color:#000;padding:10px;border-radius:3px;font-size:15px;font-weight:600;cursor:pointer;margin-top:4px}
+.auth-submit:hover{background:#D0901E}
+.auth-warn{font-size:14px;color:var(--gray-mid);text-align:center;margin-top:12px;line-height:1.6}
+</style>
+</head>
+<body>
+
+<!-- ─── Auth Screen ─── -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo">TRAMA<span>-TAR</span></div>
+    <div class="auth-sub">Plataforma de Mapeamento de Redes<br>pela Teoria Ator-Rede</div>
+    <div class="auth-tab">
+      <button class="active" id="tab-login" onclick="switchTab('login')">Entrar</button>
+      <button id="tab-reg" onclick="switchTab('registro')">Criar conta</button>
+    </div>
+    <div id="auth-form-login">
+      <div class="auth-field"><label>E-mail</label><input type="email" id="l-email" placeholder="pesquisadora@inst.edu.br"></div>
+      <div class="auth-field"><label>Senha</label><input type="password" id="l-senha" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <button class="auth-submit" onclick="doLogin()">Entrar</button>
+    </div>
+    <div id="auth-form-registro" style="display:none">
+      <div class="auth-field"><label>Nome</label><input type="text" id="r-nome" placeholder="Seu nome completo"></div>
+      <div class="auth-field"><label>E-mail</label><input type="email" id="r-email" placeholder="pesquisadora@inst.edu.br"></div>
+      <div class="auth-field"><label>Senha (mín. 8 caracteres)</label><input type="password" id="r-senha" placeholder="••••••••" onkeydown="if(event.key==='Enter')doRegistro()"></div>
+      <button class="auth-submit" onclick="doRegistro()">Criar conta</button>
+      <div class="auth-warn">⚠ A senha não pode ser recuperada — use um gerenciador de senhas.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Main App ─── -->
+<div id="app" style="display:none">
+  <div id="topbar">
+    <div class="logo">TRAMA<span>-TAR</span></div>
+    <div class="steps" id="steps">
+      <span class="step" id="step-0" onclick="goToActivity(0)">⓪ CONTROVÉRSIA</span>
+      <span class="step-arrow">›</span>
+      <span class="step" id="step-1" onclick="goToActivity(1)">① LISTAR</span>
+      <span class="step-arrow">›</span>
+      <span class="step" id="step-2" onclick="goToActivity(2)">② DISTRIBUIR</span>
+      <span class="step-arrow">›</span>
+      <span class="step" id="step-3" onclick="goToActivity(3)">③ NOMEAR</span>
+    </div>
+    <div class="ml-auto" style="display:flex;gap:6px;align-items:center">
+      <button class="topbar-btn" onclick="showDashboard()">⊞ Minhas Redes</button>
+      <button class="topbar-btn" id="btn-export" onclick="openExportModal()" style="display:none">↓ Exportar</button>
+      <div class="font-ctrl" title="Tamanho da fonte">
+        <button class="font-btn" onclick="changeFontSize(-1)">A-</button>
+        <span class="font-label" id="font-size-label">14px</span>
+        <button class="font-btn" onclick="changeFontSize(1)">A+</button>
+      </div>
+      <button class="topbar-btn" onclick="doLogout()">Sair</button>
+    </div>
+  </div>
+
+  <!-- MOP Bar -->
+  <div id="mop-bar" style="display:none">
+    <span class="label">Matéria de preocupação</span>
+    <span class="text" id="mop-text">—</span>
+  </div>
+
+  <!-- Dashboard -->
+  <div id="dashboard">
+    <div style="display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="font-size:16px;font-weight:600">Minhas Redes</div>
+        <div style="font-size:15px;color:var(--gray-mid);margin-top:2px">sciencestudios.com.br</div>
+      </div>
+      <button class="topbar-btn primary" onclick="openNovaRedeModal()">+ Nova Rede</button>
+    </div>
+    <div class="dash-grid" id="dash-grid"></div>
+  </div>
+
+  <!-- Main workspace (activities 0–3) -->
+  <div id="main" style="display:none">
+    <!-- Left: list panel -->
+    <div id="left-panel">
+      <div class="panel-header">
+        <div class="panel-title" id="lp-title">Actantes</div>
+        <div class="panel-sub" id="lp-sub">—</div>
+      </div>
+      <div class="quick-add" id="quick-add-bar">
+        <input type="text" id="quick-add-input" placeholder="Nome do actante — Enter" onkeydown="if(event.key==='Enter')quickAddActante()">
+        <button onclick="quickAddActante()">+</button>
+      </div>
+      <div id="actante-list"></div>
+    </div>
+
+    <!-- Center: canvas -->
+    <div id="canvas-wrap">
+      <svg id="canvas"></svg>
+      <div class="canvas-empty" id="canvas-empty">
+        <div class="icon">◇</div>
+        <div>Arraste actantes da lista para a rede</div>
+        <div style="font-size:14px;color:var(--gray-lo);margin-top:4px">ou clique num actante e use "Distribuir"</div>
+      </div>
+      <div id="legend">
+        <div class="leg-row"><div class="leg-line" style="background:var(--amber)"></div>Mediador</div>
+        <div class="leg-row"><div class="leg-line" style="background:var(--gray-hi);height:1px;border-top:1.5px dashed var(--gray-hi)"></div>Intermediário</div>
+        <div class="leg-row"><div class="leg-line" style="background:var(--red)"></div>Contestado</div>
+        <div class="leg-row"><div class="leg-line" style="background:rgba(240,237,232,.2);border-top:1px dotted"></div>Hipotético</div>
+      </div>
+    </div>
+
+    <!-- Right: context sidebar -->
+    <div id="right-panel">
+      <div class="sidebar-header">
+        <div class="sidebar-title">Painel de Contexto</div>
+      </div>
+      <div id="sidebar-content">
+        <div class="sidebar-empty">Selecione um actante ou associação para ver e editar seus detalhes.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Modal: Nova Rede (Atividade 0) ─── -->
+<div class="modal-overlay" id="modal-rede">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-rede-title">⓪ Nova Rede — Declarar a Controvérsia</div>
+      <button class="modal-close" onclick="closeModal('modal-rede')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="epist-note"><strong>ATIVIDADE 0:</strong> O mapeamento começa pela controvérsia — não pelo inventário. Sem nomear o que está em disputa, não há critério de relevância para decidir quais actantes pertencem à rede.</div>
+      <div class="fg"><div class="fl"><span class="req-dot"></span>Nome da Rede</div><input type="text" class="fi" id="r-nome-rede" placeholder="Ex: Monitoramento Hídrico — Coque 2026"></div>
+      <div class="fg">
+        <div class="fl"><span class="req-dot"></span>A Controvérsia <span style="color:var(--gray-mid);text-transform:none;font-size:8px;letter-spacing:0">— descreva em linguagem livre</span></div>
+        <textarea class="ft" id="r-controversia" rows="5" placeholder="O que está sendo contestado, fabricado ou dissolvido nesta situação?&#10;Quais entidades parecem estar sendo mobilizadas para sustentar posições em disputa?&#10;O que mudaria se a controvérsia fosse resolvida de uma maneira em vez de outra?"></textarea>
+      </div>
+      <div class="fg"><div class="fl"><span class="req-dot"></span>Matéria de Preocupação <span style="color:var(--gray-mid);text-transform:none;font-size:8px;letter-spacing:0">— síntese em até 280 chars · persiste em todas as telas</span></div><input type="text" class="fi" id="r-mop" maxlength="280" placeholder="Ex: Quem aciona o alerta de enchente no Coque?"><div id="r-mop-count" style="text-align:right;font-size:8px;color:var(--gray-lo);font-family:var(--mono);margin-top:2px">0/280</div></div>
+      <div class="fg"><div class="fl">Perspectiva da Mapeadora <span style="color:var(--gray-mid);text-transform:none;font-size:8px;letter-spacing:0">— Quinta Incerteza: você não está fora da rede</span></div><textarea class="ft" id="r-perspectiva" rows="2" placeholder="De onde você observa esta controvérsia? Que relações tem com os actantes que vai mapear?"></textarea></div>
+      <div class="fg"><div class="fl">Actantes de pré-campo <span style="color:var(--gray-mid);text-transform:none;font-size:8px;letter-spacing:0">— hipóteses de entrada, separar por Enter</span></div><textarea class="ft" id="r-precampo" rows="3" placeholder="Fab Lab Recife&#10;Defesa Civil / PE&#10;Comunidade do Coque"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-rede')">Cancelar</button>
+      <button class="btn primary" onclick="salvarRede()">Iniciar Inventário →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Modal: Editar Actante ─── -->
+<div class="modal-overlay" id="modal-actante">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modal-actante-title">Actante</div>
+      <button class="modal-close" onclick="closeModal('modal-actante')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="epist-note"><strong>SIMETRIA GENERALIZADA:</strong> Nenhum campo de tipo obrigatório. Qualquer entidade que faz diferença é um actante legítimo — humana, não-humana, documento, algoritmo.</div>
+      <div class="fg"><div class="fl"><span class="req-dot"></span>Nome</div><input type="text" class="fi" id="a-nome" placeholder="Nome do actante"></div>
+      <div class="fg"><div class="fl">Descrição</div><textarea class="ft" id="a-desc" rows="3" placeholder="Descreva livremente o actante e seu papel observado..."></textarea></div>
+      <div class="fg">
+        <div class="fl">Modos de Agência</div>
+        <div class="chip-row" id="a-modos">
+          <span class="chip-opt" data-v="autoriza" onclick="toggleChip(this)">autoriza</span>
+          <span class="chip-opt" data-v="bloqueia" onclick="toggleChip(this)">bloqueia</span>
+          <span class="chip-opt" data-v="possibilita" onclick="toggleChip(this)">possibilita</span>
+          <span class="chip-opt" data-v="proíbe" onclick="toggleChip(this)">proíbe</span>
+          <span class="chip-opt" data-v="sugere" onclick="toggleChip(this)">sugere</span>
+          <span class="chip-opt" data-v="recruta" onclick="toggleChip(this)">recruta</span>
+          <span class="chip-opt" data-v="distribui" onclick="toggleChip(this)">distribui</span>
+          <span class="chip-opt" data-v="inscreve" onclick="toggleChip(this)">inscreve</span>
+          <span class="chip-opt" data-v="traduz" onclick="toggleChip(this)">traduz</span>
+          <span class="chip-opt" data-v="estabiliza" onclick="toggleChip(this)">estabiliza</span>
+          <span class="chip-opt" data-v="contesta" onclick="toggleChip(this)">contesta</span>
+        </div>
+      </div>
+      <div class="fg"><div class="fl">Tags <span style="color:var(--gray-mid);text-transform:none;font-size:8px;letter-spacing:0">(separar por vírgula)</span></div><input type="text" class="fi" id="a-tags" placeholder="governo, PE, tecnologia..."></div>
+      <div class="fg">
+        <div class="fl">Status</div>
+        <div class="chip-row">
+          <span class="chip-opt active" data-v="em_formacao" id="s-form" onclick="pickStatus(this)">em formação</span>
+          <span class="chip-opt" data-v="estabilizado" id="s-estab" onclick="pickStatus(this)">estabilizado</span>
+          <span class="chip-opt" data-v="contestado" id="s-cont" onclick="pickStatus(this)">contestado</span>
+          <span class="chip-opt" data-v="disperso" id="s-disp" onclick="pickStatus(this)">disperso</span>
+        </div>
+        <input type="hidden" id="a-status" value="em_formacao">
+      </div>
+      <div class="fg"><div class="fl">Fonte</div><select class="fs" id="a-fonte"><option value="observacao_campo">Observação de campo</option><option value="entrevista">Entrevista</option><option value="documento">Documento</option><option value="dado_secundario">Dado secundário</option><option value="inferencia">Inferência analítica</option></select></div>
+      <div class="toggle-row" id="a-plasma-row" onclick="togglePlasmaModal()">
+        <div class="tt" id="a-plasma-track"><div class="th"></div></div>
+        <span class="tl">Adicionar ao Plasma <span style="color:var(--gray-mid);font-size:14px">(entidade suspeita, não confirmada)</span></span>
+        <input type="hidden" id="a-plasma-val" value="false">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-actante')">Cancelar</button>
+      <button class="btn primary" onclick="salvarActante()">Salvar Actante</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Modal: Nomear Associação (Atividade 3) ─── -->
+<div class="modal-overlay" id="modal-assoc">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">③ Nomear Associação</div>
+      <button class="modal-close" onclick="cancelAssoc()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="epist-note"><strong>SHIBBOLETH TAR:</strong> Esta é a distinção mais importante. Sem modo de ação, a associação não pode ser salva.</div>
+      <div style="text-align:center;padding:12px 20px 8px;font-size:14px;color:var(--white);line-height:1.5">
+        <span id="assoc-origem-nome" style="color:var(--amber)">—</span>
+        <span style="color:var(--gray-mid);margin:0 6px">→</span>
+        <span id="assoc-destino-nome" style="color:var(--amber)">—</span>
+      </div>
+      <div style="text-align:center;font-size:15px;color:var(--white);padding:0 20px 14px;line-height:1.6">
+        Esta conexão <strong>transforma</strong> o que transporta,<br>ou apenas <em style="color:var(--gray-hi)">carrega</em> sem transformar?
+      </div>
+      <div class="fg" style="padding-top:0">
+        <div class="mode-picker">
+          <div class="mode-card mediador" id="mc-med" onclick="selectModo('mediador')">
+            <div class="mode-card-title">◈ Mediador</div>
+            <div class="mode-card-desc">Transforma o que transporta. Output não previsível. Precisa ser descrito em detalhe.</div>
+            <div class="mode-card-ex">Ex: reunião de negociação, algoritmo adaptativo</div>
+          </div>
+          <div class="mode-card intermediario" id="mc-int" onclick="selectModo('intermediario')">
+            <div class="mode-card-title">◇ Intermediário</div>
+            <div class="mode-card-desc">Carrega sem transformar. Output previsível. Pode ser simplificado.</div>
+            <div class="mode-card-ex">Ex: protocolo padronizado, formulário arquivado</div>
+          </div>
+        </div>
+        <input type="hidden" id="assoc-modo" value="">
+      </div>
+      <div class="fg"><div class="fl">Descrição da Tradução</div><textarea class="ft" id="assoc-desc" rows="3" placeholder="O que acontece nesta passagem? O que A faz a B? O que se transforma, o que se perde?"></textarea></div>
+      <div class="fg">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div>
+            <div class="fl">Direção</div>
+            <select class="fs" id="assoc-direcao">
+              <option value="unidirecional">→ Unidirecional</option>
+              <option value="bidirecional">↔ Bidirecional</option>
+              <option value="nao_direcional">— Livre</option>
+            </select>
+          </div>
+          <div>
+            <div class="fl">Intensidade: <span id="assoc-int-val">3</span>/5</div>
+            <input type="range" min="1" max="5" value="3" id="assoc-intensidade" style="width:100%;accent-color:var(--amber)" oninput="document.getElementById('assoc-int-val').textContent=this.value">
+          </div>
+        </div>
+      </div>
+      <div class="fg">
+        <div class="fl">Status</div>
+        <div class="chip-row">
+          <span class="chip-opt active" data-v="ativa" onclick="pickAssocStatus(this)">ativa</span>
+          <span class="chip-opt" data-v="contestada" onclick="pickAssocStatus(this)">contestada</span>
+          <span class="chip-opt" data-v="hipotetica" onclick="pickAssocStatus(this)">hipotética</span>
+          <span class="chip-opt" data-v="historica" onclick="pickAssocStatus(this)">histórica</span>
+        </div>
+        <input type="hidden" id="assoc-status" value="ativa">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <div style="flex:1;font-size:14px;color:var(--gray-mid)">Sem modo de ação, a seta não pode ser salva.</div>
+      <button class="btn" onclick="cancelAssoc()">Cancelar</button>
+      <button class="btn primary" id="btn-salvar-assoc" onclick="salvarAssoc()" disabled>Salvar Associação</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Modal: Exportação ─── -->
+<div class="modal-overlay" id="modal-export">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Exportar Relato</div>
+      <button class="modal-close" onclick="closeModal('modal-export')">✕</button>
+    </div>
+    <div class="modal-body" style="padding:16px 20px;display:flex;flex-direction:column;gap:8px">
+      <div style="font-size:15px;color:var(--gray-hi);line-height:1.7;margin-bottom:6px">Exporte a rede nos formatos disponíveis. O Markdown contém o relato completo com narrativa de traduções.</div>
+      <button class="btn" style="text-align:left;padding:10px 14px" onclick="exportar('markdown')">↓ Relato ANT em Markdown (.md) — relato completo com narrativa</button>
+      <button class="btn" style="text-align:left;padding:10px 14px" onclick="exportar('csv')">↓ Dados estruturados CSV — actantes.csv + associacoes.csv</button>
+      <button class="btn" style="text-align:left;padding:10px 14px" onclick="exportar('json')">↓ Backup completo JSON — reimportável no TRAMA-TAR</button>
+      <button class="btn" style="text-align:left;padding:10px 14px" onclick="exportar('graphml')">↓ GraphML (.graphml) — Gephi, Cytoscape</button>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('modal-export')">Fechar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Alerts container -->
+<div id="alerts"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// TRAMA-TAR — Frontend SPA
+// ═══════════════════════════════════════════════════════════════════
+
+// ─── State ────────────────────────────────────────────────────────
+const S = {
+  token: localStorage.getItem('trama-tar-token'),
+  mapeador: null,
+  redes: [],
+  redeAtual: null,
+  actantes: [],
+  associacoes: [],
+  actanteEditandoId: null,
+  pendingAssoc: null,        // { origem, destino } being created
+  assocEditandoId: null,
+  selectedNodeId: null,
+  selectedAssocId: null,
+  draggingNode: null,
+  connectingFrom: null,      // node ID being connected
+};
+
+// ─── API ──────────────────────────────────────────────────────────
+async function api(method, path, body = null) {
+  const opts = {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+  };
+  if (S.token) opts.headers['Authorization'] = `Bearer ${S.token}`;
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch('/api' + path, opts);
+  if (r.status === 401) { doLogout(); return null; }
+  if (!r.ok) {
+    const e = await r.json().catch(() => ({ erro: r.statusText }));
+    throw new Error(e.erro || 'Erro desconhecido');
+  }
+  const ct = r.headers.get('content-type') || '';
+  if (ct.includes('markdown') || ct.includes('text/')) return r.text();
+  return r.json();
+}
+
+// ─── Auth ─────────────────────────────────────────────────────────
+function switchTab(tab) {
+  document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+  document.getElementById('tab-reg').classList.toggle('active', tab === 'registro');
+  document.getElementById('auth-form-login').style.display = tab === 'login' ? '' : 'none';
+  document.getElementById('auth-form-registro').style.display = tab === 'registro' ? '' : 'none';
+}
+
+async function doLogin() {
+  try {
+    const r = await api('POST', '/auth/login', {
+      email: document.getElementById('l-email').value,
+      senha: document.getElementById('l-senha').value,
+    });
+    if (!r) return;
+    finishAuth(r);
+  } catch(e) { alert(e.message, 'error'); }
+}
+
+async function doRegistro() {
+  try {
+    const r = await api('POST', '/auth/registro', {
+      nome: document.getElementById('r-nome').value,
+      email: document.getElementById('r-email').value,
+      senha: document.getElementById('r-senha').value,
+    });
+    if (!r) return;
+    finishAuth(r);
+  } catch(e) { alert(e.message, 'error'); }
+}
+
+function finishAuth(r) {
+  S.token = r.token;
+  S.mapeador = r.mapeador;
+  localStorage.setItem('trama-tar-token', r.token);
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'grid';
+  showDashboard();
+}
+
+function doLogout() {
+  S.token = null; S.mapeador = null;
+  localStorage.removeItem('trama-tar-token');
+  document.getElementById('auth-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+}
+
+// ─── Dashboard ────────────────────────────────────────────────────
+async function showDashboard() {
+  document.getElementById('dashboard').style.display = 'block';
+  document.getElementById('main').style.display = 'none';
+  document.getElementById('mop-bar').style.display = 'none';
+  document.getElementById('btn-export').style.display = 'none';
+  document.getElementById('steps').style.display = 'none';
+  S.redeAtual = null;
+  await loadRedes();
+}
+
+async function loadRedes() {
+  try {
+    S.redes = await api('GET', '/redes');
+    renderDashboard();
+  } catch(e) { alert(e.message, 'error'); }
+}
+
+function renderDashboard() {
+  const grid = document.getElementById('dash-grid');
+  grid.innerHTML = '';
+
+  for (const r of S.redes) {
+    const total = r.total_actantes || 0;
+    const progPct = r.total_assocs > 0 ?
+      Math.round(((r.total_assocs - (r.assocs_sem_modo || 0)) / r.total_assocs) * 100) : 0;
+
+    const card = document.createElement('div');
+    card.className = 'dash-card';
+    card.innerHTML = `
+      <div class="dash-title">${esc(r.nome)}</div>
+      <div class="dash-mop">${esc(r.materia_de_preocupacao || 'Matéria de preocupação não declarada')}</div>
+      <div class="dash-metrics">
+        <div class="dm"><div class="dm-n">${total}</div><div class="dm-l">actantes</div></div>
+        <div class="dm amber"><div class="dm-n">${r.mediadores || 0}</div><div class="dm-l">mediadores</div></div>
+        <div class="dm"><div class="dm-n">${r.total_plasma || 0}</div><div class="dm-l">↯ plasma</div></div>
+        <div class="dm ${r.contestados > 0 ? 'red' : ''}"><div class="dm-n">${r.contestados || 0}</div><div class="dm-l">controv.</div></div>
+      </div>
+      <div class="dash-prog"><div class="dash-prog-fill" style="width:${progPct}%"></div></div>
+      <div style="display:flex;justify-content:space-between;margin-top:4px">
+        <span style="font-size:15px;color:var(--gray-mid)">${progPct}% das setas nomeadas</span>
+        <span style="font-size:15px;color:var(--gray-mid)">${r.atualizado_em ? r.atualizado_em.slice(0,10) : '—'}</span>
+      </div>`;
+    card.addEventListener('click', () => openRede(r.id));
+    grid.appendChild(card);
+  }
+
+  // Add card
+  const addCard = document.createElement('div');
+  addCard.className = 'dash-add';
+  addCard.innerHTML = `<div class="icon">+</div><div style="font-size:14px;color:var(--gray-mid)">Nova rede</div><div style="font-size:15px;color:var(--gray-lo);font-family:var(--mono)">Comece pela controvérsia</div>`;
+  addCard.addEventListener('click', openNovaRedeModal);
+  grid.appendChild(addCard);
+}
+
+// ─── Rede ─────────────────────────────────────────────────────────
+function openNovaRedeModal() {
+  document.getElementById('r-nome-rede').value = '';
+  document.getElementById('r-controversia').value = '';
+  document.getElementById('r-mop').value = '';
+  document.getElementById('r-perspectiva').value = '';
+  document.getElementById('r-precampo').value = '';
+  document.getElementById('r-mop-count').textContent = '0/280';
+  document.getElementById('modal-rede-title').textContent = '⓪ Nova Rede — Declarar a Controvérsia';
+  openModal('modal-rede');
+  setTimeout(() => document.getElementById('r-nome-rede').focus(), 100);
+}
+
+document.getElementById('r-mop').addEventListener('input', function() {
+  document.getElementById('r-mop-count').textContent = `${this.value.length}/280`;
+});
+
+async function salvarRede() {
+  const nome = document.getElementById('r-nome-rede').value.trim();
+  if (!nome) { alert('Nome da rede é obrigatório.', 'error'); return; }
+
+  const precampoRaw = document.getElementById('r-precampo').value.trim();
+  const actantes_pre_campo = precampoRaw.split('\n').map(s => s.trim()).filter(Boolean);
+
+  try {
+    const rede = await api('POST', '/redes', {
+      nome,
+      controversia: document.getElementById('r-controversia').value.trim() || null,
+      materia_de_preocupacao: document.getElementById('r-mop').value.trim() || null,
+      perspectiva_mapeador: document.getElementById('r-perspectiva').value.trim() || null,
+      actantes_pre_campo,
+    });
+    closeModal('modal-rede');
+    await openRede(rede.id);
+    alert('Rede criada! Agora liste os actantes.', 'success');
+  } catch(e) { alert(e.message, 'error'); }
+}
+
+async function openRede(id) {
+  try {
+    const rede = await api('GET', `/redes/${id}`);
+    S.redeAtual = rede;
+    S.actantes = rede.actantes || [];
+    S.associacoes = rede.associacoes || [];
+
+    document.getElementById('dashboard').style.display = 'none';
+    document.getElementById('main').style.display = 'grid';
+    document.getElementById('btn-export').style.display = '';
+    document.getElementById('steps').style.display = 'flex';
+
+    // MOP bar
+    if (rede.materia_de_preocupacao) {
+      document.getElementById('mop-bar').style.display = 'flex';
+      document.getElementById('mop-text').textContent = rede.materia_de_preocupacao;
+    } else {
+      document.getElementById('mop-bar').style.display = 'none';
+    }
+
+    goToActivity(rede.atividade_atual || 0);
+  } catch(e) { alert(e.message, 'error'); }
+}
+
+// ─── Activities ───────────────────────────────────────────────────
+function goToActivity(n) {
+  if (!S.redeAtual) return;
+  [0,1,2,3].forEach(i => {
+    const s = document.getElementById(`step-${i}`);
+    s.className = 'step ' + (i < n ? 'done' : i === n ? 'active' : '');
+  });
+
+  // Determine quick-add visibility
+  document.getElementById('quick-add-bar').style.display = n >= 1 ? 'flex' : 'none';
+  document.getElementById('lp-title').textContent = n === 0 ? 'Controvérsia' : 'Actantes';
+
+  if (n === 0) {
+    // Show controversy details in left panel
+    renderControversiaPanel();
+  } else {
+    renderActanteList();
+  }
+
+  renderCanvas();
+  clearSidebar();
+
+  // Save activity
+  if (S.redeAtual.atividade_atual !== n) {
+    api('PATCH', `/redes/${S.redeAtual.id}`, { atividade_atual: n }).catch(() => {});
+    S.redeAtual.atividade_atual = n;
+  }
+}
+
+function renderControversiaPanel() {
+  const r = S.redeAtual;
+  const lp = document.getElementById('actante-list');
+  lp.innerHTML = `
+    <div style="padding:12px 14px">
+      <div style="font-size:14px;color:var(--amber-d);font-family:var(--mono);margin-bottom:6px">CONTROVÉRSIA</div>
+      <div style="font-size:15px;color:var(--gray-hi);line-height:1.7;margin-bottom:12px">${esc(r.controversia || '—')}</div>
+      <div style="font-size:14px;color:var(--amber-d);font-family:var(--mono);margin-bottom:4px">PERSPECTIVA</div>
+      <div style="font-size:14px;color:var(--gray-mid);line-height:1.6;margin-bottom:12px">${esc(r.perspectiva_mapeador || '—')}</div>
+      <button class="btn" style="width:100%;font-size:15px" onclick="openEditRedeModal()">✎ Editar Controvérsia</button>
+      <button class="btn primary" style="width:100%;font-size:15px;margin-top:6px" onclick="goToActivity(1)">Iniciar Inventário →</button>
+    </div>`;
+  document.getElementById('lp-sub').textContent = r.escopo_temporal || '';
+}
+
+function openEditRedeModal() {
+  const r = S.redeAtual;
+  document.getElementById('r-nome-rede').value = r.nome;
+  document.getElementById('r-controversia').value = r.controversia || '';
+  document.getElementById('r-mop').value = r.materia_de_preocupacao || '';
+  document.getElementById('r-perspectiva').value = r.perspectiva_mapeador || '';
+  document.getElementById('r-precampo').value = '';
+  document.getElementById('r-mop-count').textContent = `${(r.materia_de_preocupacao||'').length}/280`;
+  document.getElementById('modal-rede-title').textContent = '⓪ Editar Controvérsia';
+  openModal('modal-rede');
+}
+
+// ─── Actante list ─────────────────────────────────────────────────
+function renderActanteList() {
+  const confirmados = S.actantes.filter(a => !a.no_plasma && a.status !== 'disperso');
+  const plasma = S.actantes.filter(a => a.no_plasma);
+  const lp = document.getElementById('actante-list');
+  const sub = document.getElementById('lp-sub');
+  sub.textContent = `${confirmados.length} actantes · ${plasma.length} no plasma`;
+  lp.innerHTML = '';
+
+  // Confirmed
+  for (const a of confirmados) lp.appendChild(buildActanteRow(a));
+
+  // Plasma section
+  if (plasma.length > 0) {
+    const sep = document.createElement('div');
+    sep.className = 'plasma-sep';
+    sep.innerHTML = '<span>↯ PLASMA — entidades suspeitas</span>';
+    lp.appendChild(sep);
+    for (const a of plasma) lp.appendChild(buildActanteRow(a, true));
+  }
+}
+
+function buildActanteRow(a, isPlasma = false) {
+  const row = document.createElement('div');
+  row.className = 'actante-row' + (S.selectedNodeId === a.id ? ' selected' : '');
+  row.dataset.id = a.id;
+
+  const dotClass = isPlasma ? 'plasma' : a.status;
+  let badge = '';
+  if (a.pre_campo) badge += `<span class="a-badge pc">pré-campo</span>`;
+  if (isPlasma) badge += `<span class="a-badge pl">↯</span>`;
+  if (a.status === 'contestado') badge += `<span class="a-badge cont">!</span>`;
+
+  row.innerHTML = `
+    <div class="a-dot ${dotClass}"></div>
+    <div class="a-name" title="${esc(a.nome)}">${esc(a.nome)}</div>
+    ${badge}
+    <div class="a-actions">
+      <button class="a-btn" onclick="event.stopPropagation();editActante('${a.id}')">✎</button>
+      <button class="a-btn" onclick="event.stopPropagation();distribuirActante('${a.id}')" title="Distribuir no canvas">◇</button>
+      <button class="a-btn del" onclick="event.stopPropagation();dispersarActante('${a.id}')">✕</button>
+    </div>`;
+
+  row.addEventListener('click', () => {
+    S.selectedNodeId = a.id;
+    renderActanteList();
+    renderActanteSidebar(a);
+    if (a.distribuido) highlightNode(a.id);
+  });
+  return row;
+}
+
+// ─── Quick add actante ────────────────────────────────────────────
+async function quickAddActante() {
+  const input = document.getElementById('quick-add-input');
+  const nome = input.value.trim();
+  if (!nome) return;
+  try {
+    const a = await api('POST', `/redes/${S.redeAtual.id}/actantes`, { nome });
+    S.actantes.push(a);
+    renderActanteList();
+    input.value = '';
+    input.focus();
+    alert(`"${nome}" adicionado.`, 'success');
+  } catch(e) { alert(e.message, 'error'); }
+}
+
+// ─── Actante CRUD ─────────────────────────────────────────────────
+function editActante(id) {
+  S.actanteEditandoId = id;
+  const a = S.actantes.find(x => x.id === id);
+  if (!a) return;
+
+  document.getElementById('modal-actante-title').textContent = 'Editar Actante';
+  document.getElementById('a-nome').value = a.nome;
+  document.getElementById('a-desc').value = a.descricao || '';
+  document.getElementById('a-tags').value = (a.tags || []).join(', ');
+  document.getElementById('a-fonte').value = a.fonte || 'observacao_campo';
+  document.getElementById('a-status').value = a.status;
+
+  // Modos
+  document.querySelectorAll('#a-modos .chip-opt').forEach(c => {
+    c.classList.toggle('active', (a.modos_agencia || []).includes(c.dataset.v));
+  });
+
+  // Status chips
+  ['form','estab','cont','disp'].forEach(k => {
+    document.getElementById(`s-${k}`).classList.remove('active');
+  });
+  const statusMap = { em_formacao:'form', estabilizado:'estab', contestado:'cont', disperso:'disp' };
+  if (statusMap[a.status]) document.getElementById(`s-${statusMap[a.status]}`).classList.add('active');
+
+  // Plasma
+  const pt = document.getElementById('a-plasma-track');
+  const on = !!a.no_plasma;
+  pt.classList.toggle('on', on);
+  document.getElementById('a-plasma-val').value = String(on);
+
+  openModal('modal-actante');
+}
+
+function openActanteModal() {
+  S.actanteEditandoId = null;
+  document.getElementById('modal-actante-title').textContent = 'Novo Actante';
+  document.getElementById('a-nome').value = '';
+  document.getElementById('a-desc').value = '';
+  document.getElementById('a-tags').value = '';
+  document.getElementById('a-fonte').value = 'observacao_campo';
+  document.getElementById('a-status').value = 'em_formacao';
+  document.querySelectorAll('#a-modos .chip-opt').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('#a-modos .chip-opt').forEach(c => c.classList.remove('active'));
+  ['form','estab','cont','disp'].forEach(k => document.getElementById(`s-${k}`).classList.remove('active'));
+  document.getElementById('s-form').classList.add('active');
+  const pt = document.getElementById('a-plasma-track');
+  pt.classList.remove('on');
+  document.getElementById('a-plasma-val').value = 'false';
+  openModal('modal-actante');
+  setTimeout(() => document.getElementById('a-nome').focus(), 100);
+}
+
+async function salvarActante() {
+  const nome = document.getElementById('a-nome').value.trim();
+  if (!nome) { alert('Nome é obrigatório.', 'error'); return; }
+
+  const body = {
+    nome,
+    descricao: document.getElementById('a-desc').value.trim() || null,
+    tags: document.getElementById('a-tags').value.split(',').map(s=>s.trim()).filter(Boolean),
+    modos_agencia: [...document.querySelectorAll('#a-modos .chip-opt.active')].map(c => c.dataset.v),
+    status: document.getElementById('a-status').value,
+    fonte: document.getElementById('a-fonte').value,
+    no_plasma: document.getElementById('a-plasma-val').value === 'true',
+  };
+
+  try {
+    if (S.actanteEditandoId) {
+      const updated = await api('PATCH', `/redes/${S.redeAtual.id}/actantes/${S.actanteEditandoId}`, body);
+      const idx = S.actantes.findIndex(a => a.id === S.actanteEditandoId);
+      if (idx >= 0) S.actantes[idx] = updated;
+    } else {
+      const a = await api('POST', `/redes/${S.redeAtual.id}/actantes`, body);
+      S.actantes.push(a);
+    }
+    closeModal('modal-actante');
+    renderActanteList();
+    renderCanvas();
+    alert('Actante salvo.', 'success');
+  } catch(e) { alert(e.message, 'error'); }
+}
+
+async function dispersarActante(id) {
+  if (!confirm('Dispersar este actante? Suas associações serão marcadas como históricas.')) return;
+  try {
+    await api('DELETE', `/redes/${S.redeAtual.id}/actantes/${id}`);
+    const a = S.actantes.find(x => x.id === id);
+    if (a) { a.status = 'disperso'; a.distribuido = false; }
+    renderActanteList();
+    renderCanvas();
+    alert('Actante disperso.', 'success');
+  } catch(e) { alert(e.message, 'error'); }
+}
+
+function distribuirActante(id) {
+  const a = S.actantes.find(x => x.id === id);
+  if (!a || a.distribuido) return;
+  a.distribuido = true;
+  a.pos_x = 200 + Math.random() * 400;
+  a.pos_y = 100 + Math.random() * 300;
+  api('PATCH', `/redes/${S.redeAtual.id}/actantes/${id}`, {
+    distribuido: true, pos_x: a.pos_x, pos_y: a.pos_y
+  }).catch(()=>{});
+  renderCanvas();
+  renderActanteList();
+  goToActivity(Math.max(S.redeAtual.atividade_atual || 0, 2));
+}
+
+// ─── Form helpers ─────────────────────────────────────────────────
+function toggleChip(el) { el.classList.toggle('active'); }
+function pickStatus(el) {
+  document.querySelectorAll('#modal-actante .chip-opt[id^="s-"]').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('a-status').value = el.dataset.v;
+}
+function pickAssocStatus(el) {
+  document.querySelectorAll('#modal-assoc .chip-opt').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('assoc-status').value = el.dataset.v;
+}
+function togglePlasmaModal() {
+  const t = document.getElementById('a-plasma-track');
+  t.classList.toggle('on');
+  document.getElementById('a-plasma-val').value = t.classList.contains('on') ? 'true' : 'false';
+}
+
+// ─── D3 Canvas ────────────────────────────────────────────────────
+let sim, svgEl, gEl, linkG, nodeG, labelG;
+let w, h;
+
+function initCanvas() {
+  const wrap = document.getElementById('canvas-wrap');
+  w = wrap.clientWidth;
+  h = wrap.clientHeight;
+  svgEl = d3.select('#canvas').attr('width', w).attr('height', h);
+  svgEl.selectAll('*').remove();
+
+  // Defs: arrowheads
+  const defs = svgEl.append('defs');
+  ['amber','gray','red','white'].forEach(c => {
+    const col = c === 'amber' ? '#F0A020' : c === 'red' ? '#F05545' : c === 'gray' ? '#888' : 'rgba(240,237,232,0.4)';
+    defs.append('marker').attr('id', `arr-${c}`)
+      .attr('viewBox','0 0 10 10').attr('refX',20).attr('refY',5)
+      .attr('markerWidth',6).attr('markerHeight',6).attr('orient','auto-start-reverse')
+      .append('path').attr('d','M1 1L8 5L1 9').attr('fill','none')
+      .attr('stroke', col).attr('stroke-width',1.5).attr('stroke-linecap','round');
+  });
+
+  // Zoom / pan
+  const zoom = d3.zoom().scaleExtent([0.1, 4])
+    .on('zoom', e => gEl.attr('transform', e.transform));
+  svgEl.call(zoom).on('dblclick.zoom', null);
+  svgEl.on('click', (e) => {
+    if (e.target === svgEl.node() || e.target.tagName === 'svg') {
+      S.selectedNodeId = null;
+      S.selectedAssocId = null;
+      clearSidebar();
+      svgEl.selectAll('.node-group').classed('selected', false);
+    }
+    if (S.connectingFrom) { S.connectingFrom = null; svgEl.selectAll('.connect-hint').remove(); }
+  });
+
+  gEl = svgEl.append('g');
+  linkG = gEl.append('g').attr('class','links');
+  nodeG = gEl.append('g').attr('class','nodes');
+  labelG = gEl.append('g').attr('class','labels');
+
+  sim = d3.forceSimulation()
+    .force('link', d3.forceLink().id(d => d.id).distance(120).strength(0.4))
+    .force('charge', d3.forceManyBody().strength(-250))
+    .force('center', d3.forceCenter(w/2, h/2))
+    .force('collision', d3.forceCollide().radius(35))
+    .on('tick', ticked);
+}
+
+function renderCanvas() {
+  if (!gEl) initCanvas();
+
+  const distributed = S.actantes.filter(a => a.distribuido && a.status !== 'disperso');
+  const activeAssocs = S.associacoes.filter(a =>
+    a.status !== 'historica' && a.modo_acao &&
+    distributed.find(n => n.id === a.origem_id) &&
+    distributed.find(n => n.id === a.destino_id)
+  );
+
+  document.getElementById('canvas-empty').style.display = distributed.length === 0 ? '' : 'none';
+
+  // Prepare simulation nodes (preserve existing positions)
+  const existing = {};
+  (sim.nodes() || []).forEach(n => { existing[n.id] = { x: n.x, y: n.y, vx: n.vx, vy: n.vy }; });
+
+  const nodes = distributed.map(a => ({
+    id: a.id, nome: a.nome, status: a.status, tipo: a.tipo,
+    x: existing[a.id] ? existing[a.id].x : (a.pos_x || w/2 + (Math.random()-.5)*200),
+    y: existing[a.id] ? existing[a.id].y : (a.pos_y || h/2 + (Math.random()-.5)*150),
+  }));
+
+  const links = activeAssocs.map(a => ({
+    id: a.id, source: a.origem_id, target: a.destino_id,
+    modo: a.modo_acao, status: a.status,
+    intensidade: a.intensidade || 3,
+  }));
+
+  sim.nodes(nodes);
+  sim.force('link').links(links);
+  sim.alpha(0.2).restart();
+
+  // Links
+  const linkSel = linkG.selectAll('.link').data(links, d => d.id);
+  linkSel.exit().remove();
+  const linkEnter = linkSel.enter().append('line').attr('class', 'link');
+  const allLinks = linkSel.merge(linkEnter)
+    .attr('stroke', d => d.status === 'contestada' ? '#F05545' : d.status === 'hipotetica' ? 'rgba(240,237,232,.25)' : d.modo === 'mediador' ? '#F0A020' : '#888')
+    .attr('stroke-width', d => d.status === 'hipotetica' ? 1 : 1 + (d.intensidade * 0.7))
+    .attr('stroke-dasharray', d => d.modo === 'intermediario' ? '7,4' : d.status === 'hipotetica' ? '2,6' : null)
+    .attr('stroke-opacity', d => d.status === 'hipotetica' ? 0.4 : 0.85)
+    .attr('marker-end', d => d.status === 'contestada' ? 'url(#arr-red)' : d.modo === 'mediador' ? 'url(#arr-amber)' : d.status === 'hipotetica' ? 'url(#arr-white)' : 'url(#arr-gray)')
+    .style('cursor', 'pointer')
+    .on('click', (e, d) => { e.stopPropagation(); selectAssoc(d.id); });
+
+  // Nodes
+  const nodeSel = nodeG.selectAll('.node-group').data(nodes, d => d.id);
+  nodeSel.exit().remove();
+  const nodeEnter = nodeSel.enter().append('g').attr('class','node-group')
+    .style('cursor','pointer')
+    .call(d3.drag()
+      .on('start', (e, d) => { if (!e.active) sim.alphaTarget(0.3).restart(); d.fx=d.x; d.fy=d.y; })
+      .on('drag', (e, d) => { d.fx=e.x; d.fy=e.y; })
+      .on('end', (e, d) => {
+        if (!e.active) sim.alphaTarget(0);
+        d.fx=null; d.fy=null;
+        // Save position
+        api('PATCH', `/redes/${S.redeAtual.id}/actantes/${d.id}`, { pos_x: d.x, pos_y: d.y }).catch(()=>{});
+        const a = S.actantes.find(x => x.id === d.id);
+        if (a) { a.pos_x = d.x; a.pos_y = d.y; }
+      })
+    )
+    .on('click', (e, d) => { e.stopPropagation(); handleNodeClick(d, e); })
+    .on('contextmenu', (e, d) => { e.preventDefault(); startConnect(d.id); });
+
+  nodeEnter.append('circle').attr('r', 14);
+  nodeEnter.append('text').attr('class','node-icon').attr('text-anchor','middle').attr('dy',4).attr('font-size',10).attr('pointer-events','none');
+
+  const allNodes = nodeSel.merge(nodeEnter);
+  allNodes.select('circle')
+    .attr('fill', d => d.tipo === 'caixa_preta' ? '#2C3E50' : '#161616')
+    .attr('stroke', d => d.status === 'contestado' ? '#F05545' : d.status === 'estabilizado' ? '#888' : '#F0A020')
+    .attr('stroke-width', d => S.selectedNodeId === d.id ? 2.5 : 1.5)
+    .attr('stroke-dasharray', d => d.status === 'em_formacao' ? '4,2' : null)
+    .attr('filter', d => S.selectedNodeId === d.id ? 'drop-shadow(0 0 6px rgba(200,132,26,.5))' : null);
+
+  allNodes.select('.node-icon')
+    .text(d => d.tipo === 'mapeador' ? '◆' : d.tipo === 'caixa_preta' ? '⬡' : '');
+
+  // Labels
+  const labelSel = labelG.selectAll('.node-label').data(nodes, d => d.id);
+  labelSel.exit().remove();
+  labelSel.enter().append('text').attr('class','node-label')
+    .attr('text-anchor','middle').attr('pointer-events','none')
+    .attr('font-size', 9).attr('font-family','Space Mono,monospace')
+    .merge(labelSel)
+    .attr('dy', 26).attr('fill', d => d.status === 'contestado' ? '#F05545' : '#888')
+    .text(d => { const n = d.nome; return n.length > 16 ? n.slice(0,14)+'…' : n; });
+
+  // Connect hint overlay (when connecting)
+  if (S.connectingFrom) {
+    const from = S.actantes.find(a => a.id === S.connectingFrom);
+    if (from) {
+      svgEl.selectAll('.connect-banner').remove();
+      svgEl.append('text').attr('class','connect-hint connect-banner')
+        .attr('x', w/2).attr('y', 24).attr('text-anchor','middle')
+        .attr('font-size',11).attr('fill','#F0A020').attr('font-family','Space Mono,monospace')
+        .text(`Conectando de "${from.nome}" — clique no actante destino`);
+    }
+  }
+}
+
+function ticked() {
+  linkG.selectAll('.link')
+    .attr('x1', d => d.source.x).attr('y1', d => d.source.y)
+    .attr('x2', d => d.target.x).attr('y2', d => d.target.y);
+  nodeG.selectAll('.node-group').attr('transform', d => `translate(${d.x},${d.y})`);
+  labelG.selectAll('.node-label').attr('x', d => d.x).attr('y', d => d.y);
+}
+
+function handleNodeClick(d, e) {
+  if (S.connectingFrom && S.connectingFrom !== d.id) {
+    // Complete connection
+    startAssocModal(S.connectingFrom, d.id);
+    S.connectingFrom = null;
+    svgEl.selectAll('.connect-hint').remove();
+    return;
+  }
+  S.selectedNodeId = d.id;
+  S.selectedAssocId = null;
+  renderActanteList();
+  const a = S.actantes.find(x => x.id === d.id);
+  if (a) renderActanteSidebar(a);
+  nodeG.selectAll('.node-group').select('circle')
+    .attr('stroke-width', n => n.id === d.id ? 2.5 : 1.5)
+    .attr('filter', n => n.id === d.id ? 'drop-shadow(0 0 6px rgba(200,132,26,.5))' : null);
+}
+
+function startConnect(id) {
+  S.connectingFrom = id;
+  renderCanvas();
+}
+
+function highlightNode(id) {
+  nodeG.selectAll('.node-group').select('circle')
+    .attr('filter', n => n.id === id ? 'drop-shadow(0 0 6px rgba(200,132,26,.5))' : null);
+}
+
+// ─── Associações ──────────────────────────────────────────────────
+function startAssocModal(origemId, destinoId) {
+  S.pendingAssoc = { origemId, destinoId };
+  S.assocEditandoId = null;
+
+  const o = S.actantes.find(a => a.id === origemId);
+  const d = S.actantes.find(a => a.id === destinoId);
+  document.getElementById('assoc-origem-nome').textContent = o ? o.nome : '?';
+  document.getElementById('assoc-destino-nome').textContent = d ? d.nome : '?';
+
+  // Reset
+  document.getElementById('assoc-modo').value = '';
+  document.getElementById('assoc-desc').value = '';
+  document.getElementById('assoc-direcao').value = 'unidirecional';
+  document.getElementById('assoc-intensidade').value = '3';
+  document.getElementById('assoc-int-val').textContent = '3';
+  document.getElementById('assoc-status').value = 'ativa';
+  document.querySelectorAll('#modal-assoc .chip-opt').forEach(c => c.classList.toggle('active', c.dataset.v === 'ativa'));
+  document.getElementById('mc-med').classList.remove('active');
+  document.getElementById('mc-int').classList.remove('active');
+  document.getElementById('btn-salvar-assoc').disabled = true;
+
+  openModal('modal-assoc');
+  goToActivity(Math.max(S.redeAtual.atividade_atual || 0, 3));
+}
+
+function selectModo(modo) {
+  document.getElementById('assoc-modo').value = modo;
+  document.getElementById('mc-med').classList.toggle('active', modo === 'mediador');
+  document.getElementById('mc-int').classList.toggle('active', modo === 'intermediario');
+  document.getElementById('btn-salvar-assoc').disabled = false;
+}
+
+async function salvarAssoc() {
+  const modo = document.getElementById('assoc-modo').value;
+  if (!modo) { alert('Qualifique o modo de ação — este campo é obrigatório na TAR.', 'error'); return; }
+
+  const body = {
+    modo_acao: modo,
+    descricao_traducao: document.getElementById('assoc-desc').value.trim() || null,
+    direcao: document.getElementById('assoc-direcao').value,
+    intensidade: parseInt(document.getElementById('assoc-intensidade').value),
+    status: document.getElementById('assoc-status').value,
+  };
+
+  try {
+    if (S.assocEditandoId) {
+      const updated = await api('PATCH', `/redes/${S.redeAtual.id}/associacoes/${S.assocEditandoId}`, body);
+      const idx = S.associacoes.findIndex(a => a.id === S.assocEditandoId);
+      if (idx >= 0) S.associacoes[idx] = updated;
+    } else {
+      const a = await api('POST', `/redes/${S.redeAtual.id}/associacoes`, {
+        ...body,
+        origem_id: S.pendingAssoc.origemId,
+        destino_id: S.pendingAssoc.destinoId,
+      });
+      S.associacoes.push(a);
+    }
+    S.pendingAssoc = null;
+    S.assocEditandoId = null;
+    closeModal('modal-assoc');
+    renderCanvas();
+    alert('Associação salva.', 'success');
+  } catch(e) { alert(e.message, 'error'); }
+}
+
+function cancelAssoc() {
+  S.pendingAssoc = null;
+  closeModal('modal-assoc');
+}
+
+function selectAssoc(id) {
+  S.selectedAssocId = id;
+  S.selectedNodeId = null;
+  const a = S.associacoes.find(x => x.id === id);
+  if (a) renderAssocSidebar(a);
+}
+
+// ─── Sidebars ─────────────────────────────────────────────────────
+function renderActanteSidebar(a) {
+  const conns = S.associacoes.filter(l =>
+    (l.origem_id === a.id || l.destino_id === a.id) && l.status !== 'historica'
+  );
+  const aMap = Object.fromEntries(S.actantes.map(x => [x.id, x.nome]));
+  const modos = (a.modos_agencia || []).map(m => `<span class="chip form">${m}</span>`).join('');
+  const tags = (a.tags || []).map(t => `<span class="chip tag">${esc(t)}</span>`).join('');
+
+  document.getElementById('sidebar-content').innerHTML = `
+    <div class="sb-section">
+      <div style="font-family:var(--mono);font-size:15px;color:var(--amber);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Actante</div>
+      <div style="font-size:15px;font-weight:600;margin-bottom:4px">${esc(a.nome)}</div>
+      <span class="chip ${a.status === 'estabilizado' ? 'estab' : a.status === 'contestado' ? 'cont' : 'form'}">${a.status.replace('_',' ')}</span>
+      ${a.pre_campo ? '<span class="chip" style="border:1px dashed var(--amber);color:var(--amber-d)">pré-campo</span>' : ''}
+      ${a.no_plasma ? '<span class="chip" style="border:1px solid var(--gray-lo);color:var(--gray-lo)">↯ plasma</span>' : ''}
+    </div>
+    <div class="sb-section sb-action-row">
+      <button class="sb-btn" onclick="editActante('${a.id}')">✎ Editar</button>
+      <button class="sb-btn" onclick="togglePlasmaActante('${a.id}')">${a.no_plasma ? '↑ Recrutar' : '↯ Plasma'}</button>
+      ${a.distribuido ? `<button class="sb-btn" onclick="startConnect('${a.id}')">⟷ Conectar</button>` : `<button class="sb-btn" onclick="distribuirActante('${a.id}')">◇ Distribuir</button>`}
+      <button class="sb-btn danger" onclick="dispersarActante('${a.id}')">✕</button>
+    </div>
+    ${a.descricao ? `<div class="sb-section"><div class="sb-label">Descrição</div><div class="sb-text">${esc(a.descricao)}</div></div>` : ''}
+    ${modos ? `<div class="sb-section"><div class="sb-label">Modos de Agência</div>${modos}</div>` : ''}
+    ${tags ? `<div class="sb-section"><div class="sb-label">Tags</div>${tags}</div>` : ''}
+    <div class="sb-section">
+      <div class="sb-label">Associações (${conns.length})</div>
+      ${conns.length === 0 ? '<div class="sb-text" style="color:var(--gray-mid)">Nenhuma ainda</div>' : conns.map(c => {
+        const other = c.origem_id === a.id ? c.destino_id : c.origem_id;
+        const arrow = c.direcao === 'bidirecional' ? '↔' : c.origem_id === a.id ? '→' : '←';
+        return `<div style="font-size:14px;padding:3px 0;display:flex;align-items:center;gap:5px">
+          <span style="color:var(--gray-hi)">${arrow} ${esc(aMap[other] || '?')}</span>
+          <span class="mode-badge ${c.modo_acao}">${c.modo_acao}</span>
+          <button class="sb-btn" onclick="editAssoc('${c.id}')" style="margin-left:auto">✎</button>
+        </div>`;
+      }).join('')}
+    </div>
+    <div class="sb-section">
+      <div class="sb-label">Proveniência</div>
+      <div style="font-size:14px;color:var(--gray-mid);font-family:var(--mono)">
+        ${a.registrado_em ? a.registrado_em.slice(0,10) : '—'} · ${(a.fonte||'').replace('_',' ')}
+      </div>
+    </div>`;
+}
+
+function renderAssocSidebar(a) {
+  const aMap = Object.fromEntries(S.actantes.map(x => [x.id, x.nome]));
+  document.getElementById('sidebar-content').innerHTML = `
+    <div class="sb-section">
+      <div style="font-family:var(--mono);font-size:15px;color:var(--amber);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Associação / Tradução</div>
+      <div style="font-size:14px;font-weight:600;margin-bottom:6px">${esc(aMap[a.origem_id]||'?')} → ${esc(aMap[a.destino_id]||'?')}</div>
+      <span class="mode-badge ${a.modo_acao}">${a.modo_acao === 'mediador' ? '◈ Mediador' : '◇ Intermediário'}</span>
+    </div>
+    <div class="sb-section sb-action-row">
+      <button class="sb-btn" onclick="editAssoc('${a.id}')">✎ Editar</button>
+      <button class="sb-btn danger" onclick="deleteAssoc('${a.id}')">✕ Remover</button>
+    </div>
+    <div class="sb-section">
+      <div class="sb-label">Nota TAR</div>
+      <div class="sb-text">${a.modo_acao === 'mediador' ? 'Esta associação <strong>transforma</strong> o que transporta. Ela precisa ser descrita e expandida — qualquer simplificação perde algo essencial.' : 'Esta associação <strong>carrega sem transformar</strong>. Pode ser simplificada ou colapsada quando a sub-rede se estabilizar.'}</div>
+    </div>
+    ${a.descricao_traducao ? `<div class="sb-section"><div class="sb-label">Tradução</div><div class="sb-text">${esc(a.descricao_traducao)}</div></div>` : ''}
+    <div class="sb-section">
+      <div class="sb-label">Intensidade / Direção / Status</div>
+      <div style="font-size:14px;color:var(--gray-hi)">${a.intensidade}/5 · ${a.direcao} · ${a.status}</div>
+    </div>
+    <div class="sb-section">
+      <div class="sb-label">Proveniência</div>
+      <div style="font-size:14px;color:var(--gray-mid);font-family:var(--mono)">${a.registrado_em ? a.registrado_em.slice(0,10) : '—'} · ${(a.fonte||'').replace('_',' ')}</div>
+    </div>`;
+}
+
+function editAssoc(id) {
+  S.assocEditandoId = id;
+  S.pendingAssoc = null;
+  const a = S.associacoes.find(x => x.id === id);
+  if (!a) return;
+
+  const o = S.actantes.find(x => x.id === a.origem_id);
+  const d = S.actantes.find(x => x.id === a.destino_id);
+  document.getElementById('assoc-origem-nome').textContent = o ? o.nome : '?';
+  document.getElementById('assoc-destino-nome').textContent = d ? d.nome : '?';
+
+  document.getElementById('assoc-modo').value = a.modo_acao || '';
+  document.getElementById('assoc-desc').value = a.descricao_traducao || '';
+  document.getElementById('assoc-direcao').value = a.direcao || 'unidirecional';
+  document.getElementById('assoc-intensidade').value = a.intensidade || 3;
+  document.getElementById('assoc-int-val').textContent = a.intensidade || 3;
+  document.getElementById('assoc-status').value = a.status || 'ativa';
+
+  document.querySelectorAll('#modal-assoc .chip-opt').forEach(c => c.classList.toggle('active', c.dataset.v === a.status));
+  document.getElementById('mc-med').classList.toggle('active', a.modo_acao === 'mediador');
+  document.getElementById('mc-int').classList.toggle('active', a.modo_acao === 'intermediario');
+  document.getElementById('btn-salvar-assoc').disabled = !a.modo_acao;
+
+  openModal('modal-assoc');
+}
+
+async function deleteAssoc(id) {
+  if (!confirm('Remover esta associação?')) return;
+  try {
+    await api('DELETE', `/redes/${S.redeAtual.id}/associacoes/${id}`);
+    S.associacoes = S.associacoes.filter(a => a.id !== id);
+    renderCanvas();
+    clearSidebar();
+    alert('Associação removida.', 'success');
+  } catch(e) { alert(e.message, 'error'); }
+}
+
+function clearSidebar() {
+  document.getElementById('sidebar-content').innerHTML = '<div class="sidebar-empty">Selecione um actante ou associação para ver seus detalhes.</div>';
+}
+
+async function togglePlasmaActante(id) {
+  const a = S.actantes.find(x => x.id === id);
+  if (!a) return;
+  try {
+    const updated = await api('PATCH', `/redes/${S.redeAtual.id}/actantes/${id}`, {
+      no_plasma: !a.no_plasma
+    });
+    Object.assign(a, updated);
+    renderActanteList();
+    renderCanvas();
+    renderActanteSidebar(a);
+    alert(a.no_plasma ? '↯ Movido para o plasma' : '↑ Recrutado para a rede', 'success');
+  } catch(e) { alert(e.message, 'error'); }
+}
+
+// ─── Export ───────────────────────────────────────────────────────
+function openExportModal() { openModal('modal-export'); }
+
+async function exportar(formato) {
+  if (!S.redeAtual) return;
+  try {
+    if (formato === 'markdown') {
+      const md = await api('GET', `/redes/${S.redeAtual.id}/exportacao/markdown`);
+      download(`relato-${S.redeAtual.nome.slice(0,20).replace(/[^a-z0-9]/gi,'_')}.md`, md, 'text/markdown');
+    } else if (formato === 'csv') {
+      const data = await api('GET', `/redes/${S.redeAtual.id}/exportacao/csv`);
+      // Salvar cada CSV
+      download('actantes.csv', '\uFEFF' + data['actantes.csv'], 'text/csv');
+      setTimeout(() => download('associacoes.csv', '\uFEFF' + data['associacoes.csv'], 'text/csv'), 200);
+    } else if (formato === 'json') {
+      const data = await api('GET', `/redes/${S.redeAtual.id}/exportacao/json`);
+      download(`trama-tar-${S.redeAtual.nome.slice(0,20)}.json`, JSON.stringify(data, null, 2), 'application/json');
+    } else if (formato === 'graphml') {
+      const data = await api('GET', `/redes/${S.redeAtual.id}/exportacao/graphml`);
+      download(`trama-tar-${S.redeAtual.nome.slice(0,20).replace(/[^a-z0-9]/gi,'_')}.graphml`, data, 'application/graphml+xml');
+    }
+    alert(`Exportação ${formato.toUpperCase()} concluída.`, 'success');
+    closeModal('modal-export');
+  } catch(e) { alert(e.message, 'error'); }
+}
+
+function download(name, content, type) {
+  const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = name; a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ─── Modal utils ──────────────────────────────────────────────────
+function openModal(id) {
+  document.getElementById(id).classList.add('open');
+  document.addEventListener('keydown', escListener);
+}
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+function escListener(e) {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
+    if (S.connectingFrom) { S.connectingFrom = null; svgEl.selectAll('.connect-hint').remove(); renderCanvas(); }
+    document.removeEventListener('keydown', escListener);
+  }
+}
+
+// ─── Alert toast ──────────────────────────────────────────────────
+function alert(msg, type = 'success') {
+  const t = document.createElement('div');
+  t.className = `alert ${type}`;
+  t.textContent = msg;
+  document.getElementById('alerts').appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+// ─── Utilities ────────────────────────────────────────────────────
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ─── Keyboard shortcuts ───────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  if (!S.redeAtual) return;
+  if (e.key === 'a') openActanteModal();
+  if (e.key === '0') goToActivity(0);
+  if (e.key === '1') goToActivity(1);
+  if (e.key === '2') goToActivity(2);
+  if (e.key === '3') goToActivity(3);
+});
+
+// ─── Resize ───────────────────────────────────────────────────────
+window.addEventListener('resize', () => {
+  if (!svgEl) return;
+  const wrap = document.getElementById('canvas-wrap');
+  w = wrap.clientWidth; h = wrap.clientHeight;
+  svgEl.attr('width', w).attr('height', h);
+  if (sim) sim.force('center', d3.forceCenter(w/2, h/2)).alpha(0.1).restart();
+});
+
+// ─── Init ─────────────────────────────────────────────────────────
+window.addEventListener('load', async () => {
+  if (S.token) {
+    try {
+      const me = await api('GET', '/auth/me');
+      if (me) {
+        S.mapeador = me;
+        document.getElementById('auth-screen').style.display = 'none';
+        document.getElementById('app').style.display = 'grid';
+        showDashboard();
+        return;
+      }
+    } catch(e) { /* token inválido, mostrar login */ }
+    localStorage.removeItem('trama-tar-token');
+    S.token = null;
+  }
+  // Mostrar tela de auth
+  document.getElementById('auth-screen').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+});
+
+// ─── Font size control ─────────────────────────────────────────
+let currentFontSize = parseInt(localStorage.getItem('trama-font-size') || '14');
+function applyFontSize() {
+  document.documentElement.style.setProperty('--font-size', currentFontSize + 'px');
+  const label = document.getElementById('font-size-label');
+  if (label) label.textContent = currentFontSize + 'px';
+  localStorage.setItem('trama-font-size', currentFontSize);
+}
+function changeFontSize(delta) {
+  currentFontSize = Math.min(22, Math.max(11, currentFontSize + delta));
+  applyFontSize();
+}
+// Apply saved font size on load
+applyFontSize();
+
+</script>
+</body>
+</html>

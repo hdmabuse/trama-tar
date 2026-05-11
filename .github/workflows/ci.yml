@@ -1,0 +1,47 @@
+name: CI — TRAMA-TAR
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '20', cache: 'npm' }
+      - run: npm ci
+      - name: Health check
+        run: |
+          mkdir -p data
+          node -e "
+            process.env.DB_PATH='./data/ci.db';
+            const {getDB}=require('./server/db/database');
+            const db=getDB();
+            const t=db.prepare(\"SELECT name FROM sqlite_master WHERE type='table'\").all();
+            console.log('Tabelas:',t.map(x=>x.name).join(', '));
+            if(t.length<5)process.exit(1);
+            console.log('✓ Schema OK');
+          "
+        env:
+          JWT_SECRET: ci-test
+          NODE_ENV: test
+
+  deploy:
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            cd ~/trama-tar
+            git pull origin main
+            docker compose build && docker compose up -d
+            sleep 8
+            curl -sf http://localhost:3000/api/health && echo "✓ Deploy OK"

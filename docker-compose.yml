@@ -1,0 +1,23 @@
+version: '3.9'
+services:
+  trama-tar:
+    build: .
+    container_name: trama-tar-app
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3001:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DB_PATH=/app/data/trama-tar.db
+      - JWT_SECRET=${JWT_SECRET}
+      - CORS_ORIGIN=${CORS_ORIGIN:-https://seudominio.com}
+    volumes:
+      - trama-data:/app/data
+    healthcheck:
+      test: ["CMD","wget","-qO-","http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+volumes:
+  trama-data:
