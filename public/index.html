@@ -274,6 +274,9 @@ html,body{height:100%;background:var(--bg);color:var(--white);font-family:var(--
     </div>
     <div class="ml-auto" style="display:flex;gap:6px;align-items:center">
       <button class="topbar-btn" onclick="showDashboard()">⊞ Minhas Redes</button>
+      <span id="btn-admin" style="display:none">
+        <button class="topbar-btn" onclick="location.href='/admin'">Admin</button>
+      </span>
       <button class="topbar-btn" id="btn-export" onclick="openExportModal()" style="display:none">↓ Exportar</button>
       <div class="font-ctrl" title="Tamanho da fonte">
         <button class="font-btn" onclick="changeFontSize(-1)">A-</button>
@@ -591,6 +594,9 @@ function finishAuth(r) {
   localStorage.setItem('trama-tar-token', r.token);
   document.getElementById('auth-screen').style.display = 'none';
   document.getElementById('app').style.display = 'grid';
+  if (r.mapeador && r.mapeador.admin) {
+    document.getElementById('btn-admin').style.display = '';
+  }
   showDashboard();
 }
 

@@ -19,7 +19,7 @@ router.post('/registro', validate(schemas.registro), async (req, res, next) => {
     const hash = await bcrypt.hash(senha, 12);
     db.prepare('INSERT INTO mapeadores (id,nome,email,senha_hash) VALUES (?,?,?,?)')
       .run(id, nome, email, hash);
-    res.status(201).json({ token: gerarToken({ id, nome, email }), mapeador: { id, nome, email } });
+    res.status(201).json({ token: gerarToken({ id, nome, email, admin: 0 }), mapeador: { id, nome, email, admin: false } });
   } catch (err) {
     next(err);
   }
@@ -34,7 +34,7 @@ router.post('/login', validate(schemas.login), async (req, res, next) => {
       throw new UnauthorizedError('E-mail ou senha incorretos.');
     }
     db.prepare("UPDATE mapeadores SET ultimo_acesso=datetime('now') WHERE id=?").run(m.id);
-    res.json({ token: gerarToken(m), mapeador: { id: m.id, nome: m.nome, email: m.email } });
+    res.json({ token: gerarToken(m), mapeador: { id: m.id, nome: m.nome, email: m.email, admin: !!m.admin } });
   } catch (err) {
     next(err);
   }
@@ -42,7 +42,7 @@ router.post('/login', validate(schemas.login), async (req, res, next) => {
 
 router.get('/me', authMiddleware, (req, res, next) => {
   try {
-    const m = getDB().prepare('SELECT id,nome,email,criado_em FROM mapeadores WHERE id=?').get(req.mapeador.id);
+    const m = getDB().prepare('SELECT id,nome,email,admin,criado_em FROM mapeadores WHERE id=?').get(req.mapeador.id);
     res.json(m);
   } catch (err) {
     next(err);

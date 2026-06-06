@@ -15,8 +15,15 @@ function authMiddleware(req, res, next) {
 }
 
 function gerarToken(m) {
-  return jwt.sign({ id: m.id, nome: m.nome, email: m.email },
+  return jwt.sign({ id: m.id, nome: m.nome, email: m.email, admin: !!m.admin },
     JWT_SECRET, { expiresIn: '24h' });
 }
 
-module.exports = { authMiddleware, gerarToken };
+function adminMiddleware(req, res, next) {
+  if (!req.mapeador || !req.mapeador.admin) {
+    return res.status(403).json({ erro: 'Acesso restrito a administradores.' });
+  }
+  next();
+}
+
+module.exports = { authMiddleware, adminMiddleware, gerarToken };

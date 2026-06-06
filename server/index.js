@@ -39,6 +39,8 @@ const { actantesRouter, associacoesRouter } = require('./routes/actantes');
 app.use('/api/redes/:redeId/actantes', limiter, actantesRouter);
 app.use('/api/redes/:redeId/associacoes', limiter, associacoesRouter);
 app.use('/api/redes/:redeId/exportacao', limiter, require('./routes/exportacao'));
+app.use('/api/admin', limiter, require('./routes/admin'));
+app.use('/api/cobranca', limiter, require('./routes/cobranca'));
 
 app.get('/api/health', (req, res) => res.json({
   status: 'ok',
@@ -79,6 +81,14 @@ app.get('/', (_req, res) => {
 
 app.get('/app', (_req, res) => {
   res.sendFile(path.join(__dirname, '../public/index.html'));
+});
+
+app.get('/admin', (_req, res) => {
+  res.sendFile(path.join(__dirname, '../public/admin/index.html'));
+});
+
+app.get('/admin/*', (_req, res) => {
+  res.sendFile(path.join(__dirname, '../public/admin/index.html'));
 });
 
 app.get('*', (req, res) => {
